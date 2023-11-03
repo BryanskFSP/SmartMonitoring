@@ -11,27 +11,27 @@ public class Mappings: Profile
     public Mappings()
     {
         CreateMap<TelegramUserViewModel, TelegramUserEditModel>().ReverseMap();
-        CreateMap<TelegramUserEditModel, TelegramUserEntity>();
-        CreateMap<TelegramUserViewModel, TelegramUserEntity>();
+        CreateMap<TelegramUserEditModel, TelegramUserEntity>().ReverseMap();
+        CreateMap<TelegramUserViewModel, TelegramUserEntity>().ReverseMap();
         
         CreateMap<AdminViewModel, AdminEditModel>().ReverseMap();
-        CreateMap<AdminEditModel, AdminEntity>();
-        CreateMap<AdminViewModel, AdminEntity>();
+        CreateMap<AdminEditModel, AdminEntity>().ReverseMap();
+        CreateMap<AdminViewModel, AdminEntity>().ReverseMap();
 
         CreateMap<InviteViewModel, InviteEditModel>().ReverseMap();
-        CreateMap<InviteEditModel, InviteEntity>();
-        CreateMap<InviteViewModel, InviteEntity>();
+        CreateMap<InviteEditModel, InviteEntity>().ReverseMap();
+        CreateMap<InviteViewModel, InviteEntity>().ReverseMap();
         
         CreateMap<DataBaseViewModel, DataBaseEditModel>().ReverseMap();
-        CreateMap<DataBaseEditModel, DataBaseEntity>();
-        CreateMap<DataBaseViewModel, DataBaseEntity>();
+        CreateMap<DataBaseEditModel, DataBaseEntity>().ReverseMap();
+        CreateMap<DataBaseViewModel, DataBaseEntity>().ReverseMap();
         
         CreateMap<OrganizationViewModel, OrganizationEditModel>().ReverseMap();
-        CreateMap<OrganizationEditModel, OrganizationEntity>();
-        CreateMap<OrganizationViewModel, OrganizationEntity>();
+        CreateMap<OrganizationEditModel, OrganizationEntity>().ReverseMap();
+        CreateMap<OrganizationViewModel, OrganizationEntity>().ReverseMap();
         
         CreateMap<DataBaseViewModel, DataBaseEditModel>().ReverseMap();
-        CreateMap<DataBaseEditModel, DataBaseEntity>();
-        CreateMap<DataBaseViewModel, DataBaseEntity>();
+        CreateMap<DataBaseEditModel, DataBaseEntity>().ReverseMap();
+        CreateMap<DataBaseViewModel, DataBaseEntity>().ReverseMap();
     }
 }
