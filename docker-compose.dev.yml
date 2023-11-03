@@ -1,0 +1,14 @@
+version: '3'
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Server/Dockerfile
+    restart: 'on-failure'
+    environment: # //TODO: check workings its or no! //TODO
+      - ASPNETCORE_ENVIRONMENT
+      - DB_CONNECTION_STRING
+      - AUTH_KEY
+    ports:
+      - 80
+      - 443

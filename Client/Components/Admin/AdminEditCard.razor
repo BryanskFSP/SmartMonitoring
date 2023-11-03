@@ -1,0 +1,118 @@
+@using AutoMapper
+@using FormatWith
+@using Refit
+@using SmartMonitoring.Shared.EditModels
+@using SmartMonitoring.Shared.Interfaces.Refit
+
+<EditForm Model="@Model" OnValidSubmit="OnValidSumbit">
+    <DataAnnotationsValidator/>
+    <MudGrid>
+        <MudItem>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Имя" @bind-Value="Model.Name" For="() => Model.Name"/>
+                    <MudTextField Label="Пароль"
+                                  @bind-Value="Model.Password"
+                                  Required="!IsEdit"
+                                  For="() => Model.Password"
+                                  InputType="InputType.Password"/>
+                    <MudTextField Label="Повторите пароль"
+                                  @bind-Value="Model.RepeatPassword"
+                                  Required="!IsEdit"
+                                  For="() => Model.Password"
+                                  InputType="InputType.Password"/>
+
+                </MudCardContent>
+                <MudCardActions>
+                    <MudFab ButtonType="ButtonType.Submit"
+                            Variant="Variant.Filled"
+                            DisableElevation="true"
+                            StartIcon="@Icons.Material.Filled.Save"
+                            Text="Сохранить"
+                            Color="Color.Primary"/>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+
+@code {
+
+    [Inject]
+    private IMapper Mapper { get; set; }
+
+    [Inject]
+    private IAdminController ModelController { get; set; }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; }
+
+
+    [Parameter]
+    public Guid? ID { get; set; }
+
+    public bool IsEdit => ID != null;
+    public string PageTitle => IsEdit ? "Изменение админа" : "Создание админа";
+
+    private AdminEditModel Model = new();
+
+    [Parameter]
+    public bool UseNavigations { get; set; } = false;
+
+    private string _navigationUrl = "/admin/admins/{ID}/edit";
+
+    [Parameter]
+    public string? NavigationUrl
+    {
+        get => _navigationUrl.FormatWith(new { ID });
+        set => _navigationUrl = value ?? string.Empty;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (IsEdit)
+            {
+                Model = Mapper.Map<AdminEditModel>(await ModelController.GetByID(ID.GetValueOrDefault()));
+            }
+        }
+        catch (ValidationApiException validationException)
+        {
+            Snackbar.Add(validationException.Content.Detail, Severity.Error);
+        }
+        catch (ApiException exception)
+        {
+            Snackbar.Add(exception.RequestMessage.Content.ToString(), Severity.Error);
+        }
+    }
+
+    private async Task OnValidSumbit()
+    {
+        try
+        {
+            var result = IsEdit
+                ? await ModelController.Update(ID.GetValueOrDefault(), Model)
+                : await ModelController.Create(Model);
+
+            Model = Mapper.Map<AdminEditModel>(result);
+            if (UseNavigations)
+            {
+                NavigationManager.NavigateTo(NavigationUrl);
+            }
+            Snackbar.Add("Админ успешно сохранён");
+        }
+        catch (ValidationApiException validationException)
+        {
+            Snackbar.Add(validationException.Content.Detail, Severity.Error);
+        }
+        catch (ApiException exception)
+        {
+            Snackbar.Add(exception.RequestMessage.Content.ToString(), Severity.Error);
+        }
+    }
+}

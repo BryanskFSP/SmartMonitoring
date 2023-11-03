@@ -1,0 +1,73 @@
+﻿@using SmartMonitoring.Shared.Extensions
+@using SmartMonitoring.Shared.Models
+@using SmartMonitoring.Shared.ViewModels
+
+@page "/admin/databases"
+
+@* @layout AdminLayout *@
+
+<PageTitle>Базы данных</PageTitle>
+
+<MudGrid>
+    <MudItem>
+        <MudText Typo="Typo.h3" GutterBottom="true">Базы данных</MudText>
+    </MudItem>
+    <MudItem>
+        <MudFab StartIcon="@Icons.Material.Filled.Add"
+                Size="Size.Small"
+                Color="Color.Success"
+                Label="Добавить"
+                Text="Добавить"
+                DisableElevation="true"
+                Href="/admin/databases/create"/>
+    </MudItem>
+</MudGrid>
+<MudPaper Class="pa-4">
+    @if (Models == null)
+    {
+        @* <MudText Class="mb-8">Загрузка данных...</MudText> *@
+        @* <MudProgressCircular Color="Color.Default" Indeterminate="true"/> *@
+        <TableSkeleton/>
+    }
+    else
+    {
+        <MudTable Items="Models" Hover="true" Filter="new Func<DataBaseViewModel, bool>(FilterFuncInput)" SortLabel="Sort By" Elevation="0">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Пользователи</MudText>
+                <MudSpacer/>
+                <MudTextField @bind-Value="SearchString" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<DataBaseViewModel, object>(x => x.Name)">Название</MudTableSortLabel>
+                </MudTh>
+                <MudTh>Действие</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Название">@context.Name</MudTd>
+                <MudTd DataLabel="Действие">
+                    <MudGrid>
+                        <MudItem>
+                            <MudFab Label="Изменить"
+                                    Size="Size.Small"
+                                    StartIcon="@Icons.Material.Filled.Edit"
+                                    Href="@($"/admin/databases/{context.ID}/edit")"
+                                    DisableElevation="true"/>
+                        </MudItem>
+                        <MudItem>
+                            <MudFab Text="Удалить"
+                                    Size="Size.Small"
+                                    Color="Color.Error"
+                                    StartIcon="@Icons.Material.Filled.Delete"
+                                    OnClick="(() => DeleteModel(context))"
+                                    DisableElevation="true"/>
+                        </MudItem>
+                    </MudGrid>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager/>
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>

@@ -1,0 +1,26 @@
+@using SmartMonitoring.Client.Components.DataBase
+
+@page "/admin/databases/{ID:guid}/edit"
+@page "/admin/databases/create"
+
+@* @layout AdminLayout *@
+
+<PageTitle>@PageTitle</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudGrid>
+            <MudItem>
+                <MudFab DisableElevation="true"
+                        StartIcon="@Icons.Material.Filled.ArrowBack"
+                        Text="Назад" Href="/admin/databases"/>
+            </MudItem>
+            <MudItem>
+                <MudText Typo="Typo.h3">@PageTitle</MudText>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem>
+        <DataBaseEditCard ID=@ID UseNavigations="true" NavigationUrl="/admin/databases/{ID}/edit"/>
+    </MudItem>
+</MudGrid>

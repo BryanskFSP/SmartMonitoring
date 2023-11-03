@@ -1,0 +1,193 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using AutoMapper
+@using FormatWith
+@using Refit
+@using SmartMonitoring.Shared.EditModels
+@using SmartMonitoring.Shared.Interfaces.Refit
+@using SmartMonitoring.Shared.Models
+@using SmartMonitoring.Shared.ViewModels
+
+<PageTitle>@PageTitle</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12" sm="6">
+        <EditForm @ref="EditForm" Model="@Model" OnValidSubmit="OnValidSumbit">
+            <DataAnnotationsValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Имя" @bind-Value="Model.Name" For="() => Model.Name"/>
+                    <MudTextField Label="Описание" @bind-Value="Model.Description" For="() => Model.Description"/>
+                    <MudTextField Label="Хост" @bind-Value="Model.Description" For="() => Model.Description"/>
+                    <MudTextField Label="База Данных" @bind-Value="Model.Description" For="() => Model.Description"/>
+                    <MudTextField Label="Пользователь" @bind-Value="Model.Description" For="() => Model.Description"/>
+                    <MudTextField Label="Пароль" @bind-Value="Model.Description" For="() => Model.Description"/>
+                    
+                    <MudAutocomplete T="OrganizationViewModel" @bind-Value="SelectedOrganization"
+                                     Label="Организация"
+                                     SearchFunc="@SearchOrganization"
+                                     ToStringFunc="@(x => x != null ? x.Name : null)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudTooltip Delay="1000" Text="Сохранить">
+                        <MudFab ButtonType="ButtonType.Submit"
+                                Variant="Variant.Filled"
+                                DisableElevation="true"
+                                StartIcon="@Icons.Material.Filled.Save"
+                                Text="Сохранить"
+                                Color="Color.Primary"/>
+                    </MudTooltip>
+                    <MudTooltip Delay="1000" Text="Сохранить">
+                        <MudFab
+                            Variant="Variant.Filled"
+                            DisableElevation="true"
+                            StartIcon="@Icons.Material.Filled.Filter"
+                            Color="Color.Warning"
+                            Label="Сохранить новым" OnClick="@SaveAsNew"/>
+                    </MudTooltip>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+
+    </MudItem>
+</MudGrid>
+
+@code
+{
+    [Parameter]
+    public bool UseNavigations { get; set; } = false;
+
+    private string _navigationUrl = "/admin/databases/{ID}/edit";
+
+    [Parameter]
+    public string? NavigationUrl
+    {
+        get => _navigationUrl.FormatWith(new { ID });
+        set => _navigationUrl = value ?? string.Empty;
+    }
+
+    [Parameter]
+    public Guid? ID { get; set; } = null;
+
+    public EditForm EditForm { get; set; }
+
+    public bool IsEdit => ID != null;
+
+    public string PageTitle => IsEdit ? "Изменение базы данных" : "Создание базы данных";
+
+    public DataBaseEditModel Model { get; set; } = new();
+
+
+    [Inject]
+    private IMapper Mapper { get; set; }
+
+    [Inject]
+    private IDataBaseController ModelController { get; set; }
+
+    [Inject]
+    private IOrganizationController OrganizationController { get; set; }
+
+
+    private List<OrganizationViewModel> Organizations = new();
+    private OrganizationViewModel SelectedOrganization;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDates();
+    }
+
+    private async Task LoadDates()
+    {
+        try
+        {
+            Organizations = await OrganizationController.GetAll();
+
+            if (IsEdit)
+            {
+                Model = Mapper.Map<DataBaseEditModel>(await ModelController.GetByID(ID.GetValueOrDefault()));
+                SelectedOrganization = Organizations.FirstOrDefault(x => x.ID == Model.OrganizationID);
+            }
+        }
+        catch (ValidationApiException validationException)
+        {
+            Snackbar.Add(validationException.Content.Detail, Severity.Error);
+        }
+        catch (ApiException exception)
+        {
+            Snackbar.Add(exception.RequestMessage.Content.ToString(), Severity.Error);
+        }
+    }
+
+    public async Task SaveAsNew()
+    {
+        ID = null;
+        await EditForm.OnValidSubmit.InvokeAsync();
+    }
+
+    private async Task<IEnumerable<OrganizationViewModel>> SearchOrganization(string arg)
+    {
+        if (string.IsNullOrWhiteSpace(arg))
+        {
+            return Organizations;
+        }
+
+        return Organizations.Where(x => x.Name.Contains(arg, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private bool Valid()
+    {
+        try
+        {
+            if (SelectedOrganization == null)
+            {
+                return false;
+            }
+
+            Model.OrganizationID = SelectedOrganization.ID;
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+
+    private async Task OnValidSumbit()
+    {
+        if (!Valid())
+        {
+            return;
+        }
+
+        try
+        {
+            var result = IsEdit
+                ? await ModelController.Update(ID.GetValueOrDefault(), Model)
+                : await ModelController.Create(Model);
+
+            Model = Mapper.Map<DataBaseEditModel>(result);
+            if (UseNavigations)
+            {
+                NavigationManager.NavigateTo(NavigationUrl);
+            }
+
+            Snackbar.Add("Расписание успешно сохранено!");
+        }
+        catch (ValidationApiException validationException)
+        {
+            Snackbar.Add(validationException.Message, Severity.Error);
+        }
+        catch (ApiException exception)
+        {
+            Snackbar.Add(exception.Content, Severity.Error);
+        }
+    }
+}
