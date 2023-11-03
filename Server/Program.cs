@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SmartMonitoring.Server;
+using SmartMonitoring.Server.Entities;
 using SmartMonitoring.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +26,10 @@ builder.Services.AddRazorPages();
 #region Services
 
 builder.Services.AddScoped<AdminService>();
+builder.Services.AddScoped<DataBaseService>();
 builder.Services.AddScoped<InviteService>();
+builder.Services.AddScoped<LogService>();
+builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<PSQLService>();
 builder.Services.AddScoped<TelegramUserService>();
 
