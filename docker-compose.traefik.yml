@@ -8,6 +8,7 @@ services:
     environment: # //TODO: check workings its or no! //TODO
       - ASPNETCORE_ENVIRONMENT
       - DB_CONNECTION_STRING
+      - BOT_URL
       - AUTH_KEY
     networks:
       - proxy

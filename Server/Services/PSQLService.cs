@@ -1,41 +1,236 @@
-﻿using Npgsql;
+﻿using FormatWith;
+using Npgsql;
+using SmartMonitoring.Server.Entities;
 using SmartMonitoring.Shared.Models;
 
 namespace SmartMonitoring.Server.Services;
 
 public class PSQLService
 {
-    private SMContext Context;
-    private NpgsqlConnection Connection;
+    private DataBaseService DBService;
 
-    public PSQLService(SMContext context)
+    private const string ConnectStringPlaceholder =
+        "Host={HOST};Database={DATABASE};Username={USER};Password={PASSWORD}";
+
+    public PSQLService(DataBaseService dbService)
     {
-        Context = context;
-        Connection = new(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"));
+        DBService = dbService;
     }
 
-    public async Task KillProcess(long pid)
+    /// <summary>
+    /// Get DB Caching ratio.
+    /// </summary>
+    /// <param name="dataBaseID">Database ID.</param>
+    /// <returns></returns>
+    public async Task<ServiceResponse<decimal>> GetCachingRatio(Guid dataBaseID)
     {
-        await Connection.OpenAsync();
+        var res = new ServiceResponse<decimal>();
+        var dataBase = await DBService.GetByID(dataBaseID);
+        if (dataBase == null)
+        {
+            return null;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var sql = $@"SELECT * FROM sys_caching_ratio()";
+
+        try
+        {
+            using var cmd = new NpgsqlCommand(sql, connection);
+
+            using var dataReader = cmd.ExecuteReader();
+            while (dataReader.Read())
+            {
+                var data = dataReader.GetDecimal(0);
+                res.Data = data;
+            }
+
+            dataReader.Close();
+            await connection.CloseAsync();
+            res.Status = true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            res.Status = false;
+            return res;
+        }
+
+        return res;
+    }
+    
+    /// <summary>
+    /// Get DB Caching indexes ratio.
+    /// </summary>
+    /// <param name="dataBaseID">Database ID.</param>
+    /// <returns></returns>
+    public async Task<ServiceResponse<decimal>> GetCachingIndexesRatio(Guid dataBaseID)
+    {
+        var res = new ServiceResponse<decimal>();
+        var dataBase = await DBService.GetByID(dataBaseID);
+        if (dataBase == null)
+        {
+            return null;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var sql = $@"SELECT * FROM sys_caching_indexes_ratio()";
+
+        try
+        {
+            using var cmd = new NpgsqlCommand(sql, connection);
+
+            using var dataReader = cmd.ExecuteReader();
+            while (dataReader.Read())
+            {
+                var data = dataReader.GetDecimal(0);
+                res.Data = data;
+            }
+
+            dataReader.Close();
+            await connection.CloseAsync();
+            res.Status = true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            res.Status = false;
+            return res;
+        }
+
+        return res;
+    }
+    
+    /// <summary>
+    /// Get memory info in DB.
+    /// </summary>
+    /// <param name="dataBaseID">DB ID.</param>
+    /// <param name="type">Memory type.</param>
+    /// <returns></returns>
+    public async Task<ServiceResponse<MemoryInfoModel>> GetMemoryInfo(Guid dataBaseID, MemoryType type)
+    {
+        var res = new ServiceResponse<MemoryInfoModel>();
+        var dataBase = await DBService.GetByID(dataBaseID);
+        if (dataBase == null)
+        {
+            return null;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var sql = $@"SELECT * FROM {(type == MemoryType.HDD ? "sys_df()" : "sys_free()")}";
+
+        try
+        {
+            using var cmd = new NpgsqlCommand(sql, connection);
+
+            using var dataReader = cmd.ExecuteReader();
+            while (dataReader.Read())
+            {
+                var data = dataReader.GetString(0).Split(',');
+                res.Data = new();
+                res.Data.Type = type;
+                if (type == MemoryType.HDD)
+                {
+                    res.Data.Total = data[2];
+                    res.Data.Used = data[3];
+                    res.Data.Avail = data[4];
+                    res.Data.UseProcent = data[5];
+                }
+                else
+                {
+                    res.Data.Total = data[1];
+                    res.Data.Used = data[2];
+                    res.Data.Avail = data[3];
+                    res.Data.UseProcent = null;
+                }
+
+            }
+
+            dataReader.Close();
+            await connection.CloseAsync();
+            res.Status = true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            res.Status = false;
+            return res;
+        }
+
+        return res;
+    }
+
+    /// <summary>
+    /// Get connection to DB.
+    /// </summary>
+    /// <param name="entity">DB entity.</param>
+    /// <returns></returns>
+    private NpgsqlConnection GetConnection(DataBaseEntity entity)
+    {
+        return new NpgsqlConnection(ConnectStringPlaceholder.FormatWith(new
+        {
+            HOST = entity.Host,
+            DATABASE = entity.Database,
+            USER = entity.User,
+            PASSWORD = entity.Password
+        }));
+    }
+
+    
+    /// <summary>
+    /// Kill process in DB>
+    /// </summary>
+    /// <param name="dbID">DB ID</param>
+    /// <param name="pid">PID.</param>
+    public async Task KillProcess(Guid dbID, long pid)
+    {
+        var res = new ServiceResponse<MemoryInfoModel>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
 
         var sql = $"SELECT pg_cancel_backend({pid})";
 
-        using var cmd = new NpgsqlCommand(sql, Connection);
+        using var cmd = new NpgsqlCommand(sql, connection);
 
-        var version = cmd.ExecuteScalar().ToString();
-        
-        await Connection.CloseAsync();
+        cmd.ExecuteNonQuery();
+
+        await connection.CloseAsync();
     }
 
-    public async Task<List<PGStatActivityModel>> GetModelsActive()
+    /// <summary>
+    /// Get activity process in DB.
+    /// </summary>
+    /// <param name="dbID">DB ID.</param>
+    /// <returns>List of Processes.</returns>
+    public async Task<List<PGStatActivityModel>> GetModelsActive(Guid dbID)
     {
-        var ress = new List<PGStatActivityModel>();
+        var res = new ServiceResponse<MemoryInfoModel>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return null;
+        }
 
-        await Connection.OpenAsync();
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var ress = new List<PGStatActivityModel>();
 
         string sql =
             "SELECT pid, datname, usename, state, backend_start\nFROM pg_stat_activity\nWHERE state = 'active'";
-        using var cmd = new NpgsqlCommand(sql, Connection);
+        var cmd = new NpgsqlCommand(sql, connection);
 
         using NpgsqlDataReader rdr = cmd.ExecuteReader();
 
@@ -53,7 +248,20 @@ public class PSQLService
         }
 
         await rdr.CloseAsync();
-        await Connection.CloseAsync();
+
+
+        sql = "SELECT pg_backend_pid()";
+        cmd = new NpgsqlCommand(sql, connection);
+        var dr = cmd.ExecuteReader();
+        var id = 0;
+        while (dr.Read())
+        {
+            id = dr.GetInt32(0);
+        }
+        ress.RemoveAll(x => x.PID == id);
+        await dr.CloseAsync();
+
+        await connection.CloseAsync();
         return ress;
     }
 }

@@ -11,6 +11,8 @@ public enum LogType
     Info,
     [Display(Name = "Подробности")]
     Verbose,
+    [Display(Name = "Предупреждение")]
+    Warning,
     [Display(Name = "Ошибка")]
     Error,
     [Display(Name = "Фатальная ошибка")]

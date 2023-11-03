@@ -14,7 +14,7 @@ public interface IBot
     Task<string> SendMessageInOrg(Guid orgId, [Body] string text);
 
     [Post("/api/users/{userId}/message/send")]
-    Task<string> SendMessageInUser(Guid userId, [Body] string text);
+    Task<string> SendMessageInUser(long userId, string text, Guid? logId = null);
     //
     // [Post("message/send")]
     // Task SendMessage(BotMessageSendModel model);

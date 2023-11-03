@@ -37,6 +37,16 @@ public class LogEntity
     public OrganizationEntity? Organization { get; set; }
 
     /// <summary>
+    /// ID базы данных.
+    /// </summary>
+    public Guid? DataBaseID { get; set; }
+    
+    /// <summary>
+    /// Сущность базы данных.
+    /// </summary>
+    public DataBaseEntity? DataBase { get; set; }
+
+    /// <summary>
     /// Тип действия.
     /// </summary>
     public ActionType Action { get; set; }

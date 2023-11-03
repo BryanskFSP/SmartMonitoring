@@ -15,5 +15,8 @@ public enum ActionType
     RunDataBase,
     KillDataBase,
     RestartDataBase,
-    KillInfinityLoop
+    KillInfinityLoop,
+    NoSpace,
+    CachingRatio,
+    CachingIndexRatio,
 }

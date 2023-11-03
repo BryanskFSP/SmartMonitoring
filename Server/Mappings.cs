@@ -33,5 +33,9 @@ public class Mappings: Profile
         CreateMap<DataBaseViewModel, DataBaseEditModel>().ReverseMap();
         CreateMap<DataBaseEditModel, DataBaseEntity>().ReverseMap();
         CreateMap<DataBaseViewModel, DataBaseEntity>().ReverseMap();
+
+        CreateMap<LogViewModel, LogEditModel>().ReverseMap();
+        CreateMap<LogEditModel, LogEntity>().ReverseMap();
+        CreateMap<LogViewModel, LogEntity>().ReverseMap();
     }
 }

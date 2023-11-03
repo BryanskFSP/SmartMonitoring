@@ -1,7 +1,11 @@
 using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using SmartMonitoring.Server.Entities;
+using SmartMonitoring.Server.Hubs;
 using SmartMonitoring.Shared.EditModels;
+using SmartMonitoring.Shared.Interfaces.Refit;
+using SmartMonitoring.Shared.Models;
 using SmartMonitoring.Shared.ViewModels;
 
 namespace SmartMonitoring.Server.Services;
@@ -13,11 +17,21 @@ public class LogService
 {
     private SMContext Context;
     private IMapper Mapper;
-
-    public LogService(SMContext context, IMapper mapper)
+    private TelegramUserService TelegramUserService;
+    private IBot BotApi;
+    
+    private readonly IHubContext<LogHub> LogHub;
+    public List<TelegramUserEntity> TelegramUsers { get; set; } = new();
+    
+    public LogService(SMContext context, IMapper mapper, IHubContext<LogHub> logHub, TelegramUserService telegramUserService, IBot botApi)
     {
         Context = context;
         Mapper = mapper;
+        LogHub = logHub;
+        TelegramUserService = telegramUserService;
+        BotApi = botApi;
+
+        TelegramUsers = TelegramUserService.GetAll();
     }
 
     public async Task<LogViewModel> Add(LogEditModel model)
@@ -27,7 +41,18 @@ public class LogService
         
         Context.Logs.Add(entity);
         await Context.SaveChangesAsync();
+        var res = Mapper.Map<LogViewModel>(entity);
 
+        if (entity.LogType >= LogType.Error)
+        {
+            var users = TelegramUsers.Where(x => x.OrganizationID == res.OrganizationID).ToList();
+            foreach (var user in users)
+            {
+                await BotApi.SendMessageInUser(user.TelegramID, entity.Description);
+            }
+        }
+        
+        await LogHub.Clients.All.SendAsync("Add", res);
         return Mapper.Map<LogViewModel>(entity);
     }
 

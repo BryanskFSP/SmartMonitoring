@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SmartMonitoring.Server;
-using SmartMonitoring.Server.Entities;
+using SmartMonitoring.Server.Hubs;
+using SmartMonitoring.Server.Jobs;
+using SmartMonitoring.Server.Providers;
 using SmartMonitoring.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +15,7 @@ StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configurat
 
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
                        "Host=90.156.208.88;Database=bruanskbd1;Username=bruansk;Password=bruansk";
-Environment.SetEnvironmentVariable("DB_CONNECTION_STRING",connectionString);
+Environment.SetEnvironmentVariable("DB_CONNECTION_STRING", connectionString);
 
 builder.Services.AddDbContext<SMContext>(options =>
     options.UseNpgsql(connectionString));
@@ -35,7 +37,17 @@ builder.Services.AddScoped<TelegramUserService>();
 
 builder.Services.AddAutoMapper(typeof(Mappings));
 
+var botUrlStr = Environment.GetEnvironmentVariable("BOT_URL") ?? "http://localhost:3000";
+RefitProvider.AddRefitInterfaces(builder.Services, new Uri(botUrlStr));
+
+
+builder.Services.AddTransient<CheckerService>();
+builder.Services.AddTransient<JobFactory>(o => new JobFactory(builder.Services.BuildServiceProvider()));
+builder.Services.AddTransient<CheckerJob>();
+
 #endregion
+
+builder.Services.AddSignalR();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 // builder.Services.AddEndpointsApiExplorer();
@@ -92,11 +104,19 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-var db = app.Services.CreateScope().ServiceProvider.GetService<SMContext>();
+var scope = app.Services.CreateScope().ServiceProvider;
+var db = scope.GetService<SMContext>();
 await db.Database.EnsureCreatedAsync();
 
 app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
+
+app.MapHub<LogHub>(LogHub.HubURI);
+
+if (!string.IsNullOrWhiteSpace(botUrlStr))
+{
+    await scope.GetService<CheckerService>().Start();
+}
 
 app.Run();

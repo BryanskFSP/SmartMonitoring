@@ -22,25 +22,27 @@ public class PSQLController: ControllerBase
     /// <summary>
     /// Get States from Main DB.
     /// </summary>
+    /// <param name="dbID">ID Database.</param>
     /// <returns></returns>
     [HttpGet]
-    public async Task<ActionResult<List<PGStatActivityModel>>> GetStates()
+    public async Task<ActionResult<List<PGStatActivityModel>>> GetStates(Guid dbID)
     {
-        var datas = await Service.GetModelsActive();
+        var datas = await Service.GetModelsActive(dbID);
 
         return datas;
     }
-
+    
     
     /// <summary>
     /// Kill State in Main DB.
     /// </summary>
+    /// <param name="dbID">ID Database.</param>
     /// <param name="pid">PID process.</param>
     /// <returns></returns>
     [HttpPost]
-    public async Task<IActionResult> KillState(long pid)
+    public async Task<IActionResult> KillState(Guid dbID,long pid)
     {
-       await Service.KillProcess(pid);
+       await Service.KillProcess(dbID, pid);
        return Ok();
     }
 }
