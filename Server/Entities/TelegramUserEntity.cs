@@ -15,7 +15,7 @@ public class TelegramUserEntity
     /// </summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
-    public int TelegramID { get; set; }
+    public long TelegramID { get; set; }
 
     public bool NotificationStatus { get; set; } = true;
 

@@ -18,6 +18,12 @@ public class AdminService : IService<AdminEntity, AdminEditModel, Guid>
         Mapper = mapper;
     }
 
+    public AdminEntity? GetByLogin(string login)
+    {
+        return Context.Admins.AsNoTracking().AsEnumerable().FirstOrDefault(x =>
+            (x.Login?.Equals(login) ?? false));
+    }
+    
     public List<AdminEntity> GetAll()
     {
         return Context.Admins.AsNoTracking().ToList();

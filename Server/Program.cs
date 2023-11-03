@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -27,6 +29,7 @@ builder.Services.AddRazorPages();
 
 #region Services
 
+builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<DataBaseService>();
 builder.Services.AddScoped<InviteService>();
@@ -81,6 +84,18 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
+// JSON settings.
+
+builder.Services.AddControllersWithViews().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.DefaultIgnoreCondition
+        = JsonIgnoreCondition.WhenWritingNull;
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -107,6 +122,7 @@ app.UseRouting();
 var scope = app.Services.CreateScope().ServiceProvider;
 var db = scope.GetService<SMContext>();
 await db.Database.EnsureCreatedAsync();
+await Task.Delay(1000);
 
 app.MapRazorPages();
 app.MapControllers();

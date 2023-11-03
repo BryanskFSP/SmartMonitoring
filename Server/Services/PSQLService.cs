@@ -1,4 +1,5 @@
-﻿using FormatWith;
+﻿using System.Text;
+using FormatWith;
 using Npgsql;
 using SmartMonitoring.Server.Entities;
 using SmartMonitoring.Shared.Models;
@@ -60,7 +61,7 @@ public class PSQLService
 
         return res;
     }
-    
+
     /// <summary>
     /// Get DB Caching indexes ratio.
     /// </summary>
@@ -104,7 +105,7 @@ public class PSQLService
 
         return res;
     }
-    
+
     /// <summary>
     /// Get memory info in DB.
     /// </summary>
@@ -149,7 +150,6 @@ public class PSQLService
                     res.Data.Avail = data[3];
                     res.Data.UseProcent = null;
                 }
-
             }
 
             dataReader.Close();
@@ -182,13 +182,12 @@ public class PSQLService
         }));
     }
 
-    
     /// <summary>
     /// Kill process in DB>
     /// </summary>
     /// <param name="dbID">DB ID</param>
     /// <param name="pid">PID.</param>
-    public async Task KillProcess(Guid dbID, long pid)
+    public async Task KillProcess(Guid dbID, string pid)
     {
         var res = new ServiceResponse<MemoryInfoModel>();
         var dataBase = await DBService.GetByID(dbID);
@@ -201,6 +200,31 @@ public class PSQLService
         await connection.OpenAsync();
 
         var sql = $"SELECT pg_cancel_backend({pid})";
+
+        using var cmd = new NpgsqlCommand(sql, connection);
+
+        cmd.ExecuteNonQuery();
+
+        await connection.CloseAsync();
+    }
+    
+    /// <summary>
+    /// Create infitity loop
+    /// </summary>
+    /// <param name="dbID">DB ID</param>
+    public async Task CreateInfinityLoop(Guid dbID)
+    {
+        var res = new ServiceResponse<MemoryInfoModel>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var sql = $"SELECT startinfinitytimework();";
 
         using var cmd = new NpgsqlCommand(sql, connection);
 
@@ -258,10 +282,102 @@ public class PSQLService
         {
             id = dr.GetInt32(0);
         }
+
         ress.RemoveAll(x => x.PID == id);
         await dr.CloseAsync();
 
         await connection.CloseAsync();
         return ress;
+    }
+
+    /// <summary>
+    /// Get top Operations In Tables
+    /// </summary>
+    /// <param name="dbID">DB ID.</param>
+    /// <returns>List of Table stats model.</returns>
+    public async Task<ServiceResponse<List<TableStatsModel>>> GetTopOperationsInTables(Guid dbID)
+    {
+        var res = new ServiceResponse<List<TableStatsModel>>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return null;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var ress = new List<TableStatsModel>();
+
+        string sql =
+            @"SELECT
+   relname, 
+   n_tup_upd+n_tup_ins+n_tup_del AS operationsAmount
+FROM pg_stat_user_tables
+ORDER BY operationsAmount DESC;
+";
+        var cmd = new NpgsqlCommand(sql, connection);
+
+        using NpgsqlDataReader rdr = cmd.ExecuteReader();
+
+        while (rdr.Read())
+        {
+            var model = new TableStatsModel()
+            {
+                Name = rdr.GetString(0),
+                OperationsCount = rdr.GetInt64(1)
+            };
+            ress.Add(model);
+        }
+
+        await rdr.CloseAsync();
+
+        await connection.CloseAsync();
+
+        res.Data = ress;
+        res.Status = true;
+        return res;
+    }
+
+    public async Task<ServiceResponse<string>> CreateFunctions(Guid dbID)
+    {
+        var res = new ServiceResponse<string>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return null;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var sql = new StringBuilder();
+        sql.AppendLine(@"CREATE OR REPLACE FUNCTION sys_caching_ratio() RETURNS SETOF numeric
+LANGUAGE plpgsql as
+$$
+BEGIN
+    RETURN QUERY SELECT ((sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read))) * 100) as ratio FROM pg_statio_user_tables;
+END;
+$$;");
+
+        sql.AppendLine(@"CREATE OR REPLACE FUNCTION sys_caching_indexes_ratio() RETURNS SETOF numeric
+LANGUAGE plpgsql as
+$$
+BEGIN
+    RETURN QUERY SELECT (((sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit)) * 100) as ratio FROM pg_statio_user_indexes;
+END;
+$$;
+");
+        sql.AppendLine(@"");
+        sql.AppendLine(@"");
+        sql.AppendLine(@"");
+
+        using var cmd = new NpgsqlCommand(sql.ToString(), connection);
+
+        cmd.ExecuteNonQuery();
+
+        await connection.CloseAsync();
+
+        return res;
     }
 }

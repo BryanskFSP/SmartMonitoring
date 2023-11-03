@@ -52,11 +52,30 @@ public class CheckerJob : IJob
         LogService = logService;
     }
 
+    private async Task CheckState(DateTime now, PGStatActivityModel state, DataBaseEntity entity)
+    {
+        var time = Values.FirstOrDefault(x => x.Type == ReferenceType.ProcessTimeInSeconds).Value;
+        if ((now - state.BackendStart).TotalSeconds >= ((int)time))
+        {
+            var log = new LogEditModel
+            {
+                LogType = LogType.Error,
+                Action = ActionType.KillInfinityLoop,
+                OrganizationID = entity.OrganizationID,
+                DataBaseID = entity.ID,
+                Description = "Сессия длится более 120 секунд. Время убивать!",
+                EntityID = state.PID.ToString()
+            };
+            await LogService.Add(log);
+        }
+    }
+
     public async Task Execute(IJobExecutionContext context)
     {
         var now = DateTime.Now;
-        Console.WriteLine("[{0}] Start sending notification...", DateTime.Now);
+        Console.WriteLine("[{0}] Start checking...", DateTime.Now);
         DataBases = DBService.GetAll();
+        List<Task> tasks = new();
 
         foreach (var entity in DataBases)
         {
@@ -83,7 +102,7 @@ public class CheckerJob : IJob
             var hdd = await PsqlService.GetMemoryInfo(entity.ID, MemoryType.HDD);
             Console.WriteLine(space.Data.UseProcent);
 
-            var procentValue =  Values.FirstOrDefault(x => x.Type == ReferenceType.Df).Value;
+            var procentValue = Values.FirstOrDefault(x => x.Type == ReferenceType.Df).Value;
 
             var procent = int.Parse(hdd.Data.UseProcent.Replace("%", ""));
             if (procent <= procentValue)
@@ -98,9 +117,10 @@ public class CheckerJob : IJob
                 };
                 await LogService.Add(log);
             }
-            
-            var cachingRatioValue =  Values.FirstOrDefault(x => x.Type == ReferenceType.CachingRatio).Value;
-            var cachingRatioIndexesValue =  Values.FirstOrDefault(x => x.Type == ReferenceType.CachingIndexesRatio).Value;
+
+            var cachingRatioValue = Values.FirstOrDefault(x => x.Type == ReferenceType.CachingRatio).Value;
+            var cachingRatioIndexesValue =
+                Values.FirstOrDefault(x => x.Type == ReferenceType.CachingIndexesRatio).Value;
 
             var cachingRatio = await PsqlService.GetCachingRatio(entity.ID);
             var cachingIndexesRatio = await PsqlService.GetCachingIndexesRatio(entity.ID);
@@ -117,8 +137,8 @@ public class CheckerJob : IJob
                 };
                 await LogService.Add(log);
             }
-            
-            
+
+
             if (cachingIndexesRatio.Data >= cachingRatioIndexesValue)
             {
                 var log = new LogEditModel
@@ -132,5 +152,7 @@ public class CheckerJob : IJob
                 await LogService.Add(log);
             }
         }
+
+        // await Task.WhenAll(tasks);
     }
 }

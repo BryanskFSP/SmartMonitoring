@@ -75,4 +75,14 @@ public class LogEntity
     /// Дата и время добавления.
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+    /// <summary>
+    /// Статус исправления.
+    /// </summary>
+    public bool FixStatus { get; set; } = false;
+    
+    /// <summary>
+    /// Дата и время обновления.
+    /// </summary>
+    public DateTime? UpdatedAt { get; set; }
 }

@@ -7,7 +7,7 @@ using SmartMonitoring.Shared.Interfaces;
 
 namespace SmartMonitoring.Server.Services;
 
-public class TelegramUserService : IService<TelegramUserEntity, TelegramUserEditModel, int>
+public class TelegramUserService : IService<TelegramUserEntity, TelegramUserEditModel, long>
 {
     private SMContext Context;
     private IMapper Mapper;
@@ -39,29 +39,29 @@ public class TelegramUserService : IService<TelegramUserEntity, TelegramUserEdit
         return GetAllFull().ToHashSHA256();
     }
 
-    public async Task<TelegramUserEntity?> GetByID(int id)
+    public async Task<TelegramUserEntity?> GetByID(long id)
     {
         return await Context.TelegramUsers.AsNoTracking()
             .FirstOrDefaultAsync(x => x.TelegramID == id);
     }
 
-    public async Task<string> GetByIDHash(int id)
+    public async Task<string> GetByIDHash(long id)
     {
         return (await GetByID(id)).ToHashSHA256();
     }
 
-    public async Task<TelegramUserEntity?> GetByIDFull(int id)
+    public async Task<TelegramUserEntity?> GetByIDFull(long id)
     {
         return await Context.TelegramUsers.AsNoTracking()
             .FirstOrDefaultAsync(x => x.TelegramID == id);
     }
 
-    public async Task<string> GetByIDFullHash(int id)
+    public async Task<string> GetByIDFullHash(long id)
     {
         return (await GetByIDFull(id)).ToHashSHA256();
     }
 
-    public async Task<TelegramUserEntity?> Update(int id, TelegramUserEditModel editModel)
+    public async Task<TelegramUserEntity?> Update(long id, TelegramUserEditModel editModel)
     {
         var entity = Mapper.Map<TelegramUserEntity>(editModel);
         entity.TelegramID = id;
@@ -96,7 +96,7 @@ public class TelegramUserService : IService<TelegramUserEntity, TelegramUserEdit
         return entity;
     }
 
-    public async Task<bool> Delete(int id)
+    public async Task<bool> Delete(long id)
     {
         var entity = await Context.TelegramUsers.FindAsync(id);
         if (entity == null)

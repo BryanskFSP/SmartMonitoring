@@ -83,8 +83,6 @@ public class DataBaseService : IService<DataBaseEntity, DataBaseEditModel, Guid>
         var entity = Mapper.Map<DataBaseEntity>(editModel);
         // TODO проверки
 
-        // TODO реализовать создание процедур
-
         Context.Add((object)entity);
 
         await Context.SaveChangesAsync();

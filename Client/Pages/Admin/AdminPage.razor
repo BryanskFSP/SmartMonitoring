@@ -1,0 +1,54 @@
+﻿@page "/admin"
+@page "/admin/index"
+@page "/admin/main"
+
+<PageTitle>Страница администратора</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">Здравствуйте!</MudText>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudText>Быстрые действия, которые доступны здесь:</MudText>
+    </MudItem>
+
+    <MudItem>
+        <a href="admin/admins">
+            <MudPaper Class="pa-3" Elevation="0" Outlined="true">
+                <MudIcon Icon="@Icons.Material.Filled.Person"/>
+                <MudText>Открыть администраторов</MudText>
+            </MudPaper>
+        </a>
+    </MudItem>
+    <MudItem>
+        <a href="admin/databases">
+            <MudPaper Class="pa-3" Elevation="0" Outlined="true">
+                <MudStack Row="true">
+                    <MudIcon Icon="@Icons.Material.Filled.VolunteerActivism"/>
+                </MudStack>
+                <MudText>Открыть базы данных</MudText>
+            </MudPaper>
+        </a>
+    </MudItem>
+
+    <MudItem>
+        <a href="admin/logs">
+            <MudPaper Class="pa-3" Elevation="0" Outlined="true">
+                <MudStack Row="true">
+                    <MudIcon Icon="@Icons.Material.Filled.Book"/>
+                </MudStack>
+                <MudText>Открыть логи</MudText>
+            </MudPaper>
+        </a>
+    </MudItem>
+    
+    <MudItem>
+        <a href="/admin/invites">
+            <MudPaper Class="pa-3" Elevation="0" Outlined="true">
+                <MudIcon Icon="@Icons.Material.Filled.BookOnline"/>
+                <MudText>Открыть приглашения</MudText>
+            </MudPaper>
+        </a>
+    </MudItem>
+</MudGrid>

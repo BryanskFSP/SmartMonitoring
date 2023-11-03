@@ -10,8 +10,8 @@ public interface IBot
     [Post("/api/users/message/send")]
     Task<string> SendMessage([Body] string text);
     
-    [Post("/api/group/{orgId}/message/send")]
-    Task<string> SendMessageInOrg(Guid orgId, [Body] string text);
+    [Post("/api/org/{orgId}/message/send")]
+    Task<string> SendMessageInOrg(Guid orgId, [Body] string text, Guid? logId = null);
 
     [Post("/api/users/{userId}/message/send")]
     Task<string> SendMessageInUser(long userId, string text, Guid? logId = null);

@@ -48,7 +48,7 @@ public class LogService
             var users = TelegramUsers.Where(x => x.OrganizationID == res.OrganizationID).ToList();
             foreach (var user in users)
             {
-                await BotApi.SendMessageInUser(user.TelegramID, entity.Description);
+                await BotApi.SendMessageInUser(user.TelegramID, entity.Description, entity.ID);
             }
         }
         
@@ -79,5 +79,41 @@ public class LogService
         }
 
         return entities.Select(x => Mapper.Map<LogViewModel>(x)).ToList();
+    }
+    
+    
+    public async Task<List<LogViewModel>> GetAllFull()
+    {
+        var entities = Context.Logs.AsNoTracking()
+            .Include(x=>x.Organization)
+            .Include(x=>x.DataBase)
+            .ToList();
+        if (!entities.Any())
+        {
+            return new();
+        }
+
+        return entities.Select(x => Mapper.Map<LogViewModel>(x)).ToList();
+    }
+
+
+    public async Task<LogViewModel?> Fix(Guid id)
+    {
+        var entity = Context.Logs
+            .FirstOrDefault(x => x.ID == id);
+        if (entity == null)
+        {
+            return null;
+        }
+        
+        entity.UpdatedAt = DateTime.Now;
+        entity.FixStatus = true;
+        await Context.SaveChangesAsync();
+        var res = Mapper.Map<LogViewModel>(entity);
+        
+        
+        await LogHub.Clients.All.SendAsync("Update", res);
+
+        return res;
     }
 }

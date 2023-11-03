@@ -1,6 +1,181 @@
-@page "/LogsPage"
-<h3>LogsPage</h3>
+@page "/admin/logs"
+@using Refit
+@using System.ComponentModel.DataAnnotations
+@using SmartMonitoring.Shared.Extensions
+@using SmartMonitoring.Shared.Interfaces.Refit
+@using SmartMonitoring.Shared.Models
+@using SmartMonitoring.Shared.ViewModels
+
+<PageTitle>Логи</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudGrid Class="d-flex align-center">
+                <MudItem>
+                    <MudDatePicker Label="Дата начала" @bind-Date="@DateStart"/>
+                </MudItem>
+                <MudItem>
+                    <MudDatePicker Label="Дата окончания" @bind-Date="@DateEnd"/>
+                </MudItem>
+                <MudItem>
+                    <MudButton OnClick="UpdateInfo">
+                        Обновить информацию
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTable Items="@Models" Filter="new Func<LogViewModel, bool>(FilterFuncInput)">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Таблица</MudText>
+                <MudSpacer/>
+                <MudTextField @bind-Value="SearchString" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LogViewModel, object>(x => x.Name)">Название</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LogViewModel, object>(x => x.Description)">Описание</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LogViewModel, object>(x => x.DataBaseID)">База данных</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LogViewModel, object>(x => x.Action)">Тип действия</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LogViewModel, object>(x => x.LogType)">Тип лога</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<LogViewModel, object>(x => x.CreatedAt)" InitialDirection="SortDirection.Descending">Создано</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    Действия
+                </MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    @(context.Name ?? "не указан")
+                </MudTd>
+                <MudTd>
+                    @(context.Description ?? "не указан")
+                </MudTd>
+                <MudTd>
+                    @if (context.DataBaseID != null)
+                    {
+                        <MudChip Icon="@Icons.Material.Filled.Person"
+                                 Href=@($"admin/databases/{context.DataBaseID}/edit")
+                                 Color="Color.Success"
+                                 Size="Size.Small">
+                            @(context.DataBase.Name)
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip
+                            Size="Size.Small">
+                            не указан
+                        </MudChip>
+                    }
+                </MudTd>
+                <MudTd>
+                    @(context.Action.GetAttribute<DisplayAttribute>().Name)
+                </MudTd>
+                <MudTd>
+                    <MudChip Size="Size.Small" Color="@GetLogTypeColor(context.LogType)">
+                        @(context.LogType.GetAttribute<DisplayAttribute>().Name)
+                    </MudChip>
+                </MudTd>
+                <MudTd>
+                    @context.CreatedAt.ToString("F")
+                </MudTd>
+                <MudTd>
+                    <MudChip Size="Size.Small">-</MudChip>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager RowsPerPageString="Строк на странице:"/>
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+</MudGrid>
 
 @code {
+
+    public DateTime? DateStart { get; set; } = DateTime.Now;
+    public DateTime? DateEnd { get; set; } = DateTime.Now;
     
+    public Color GetLogTypeColor(LogType logType)
+    {
+        switch (logType)
+        {
+            case LogType.Verbose:
+                return Color.Default;
+            case LogType.Info:
+                return Color.Default;
+            case LogType.Warning:
+                return Color.Warning;
+            case LogType.Error:
+                return Color.Error;
+            case LogType.Fatal:
+                return Color.Error;
+            default:
+                return Color.Default;
+        }
+    }
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; }
+
+    [Inject]
+    private IDialogService DialogService { get; set; }
+
+    public List<LogViewModel> ClearModels { get; set; } = new();
+    public List<LogViewModel> Models { get; set; } = new();
+    private string SearchString = "";
+
+    [Inject]
+    public ILogController ModelController { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDates();
+    }
+
+    private async Task LoadDates()
+    {
+        try
+        {
+            ClearModels = await ModelController.GetFull();
+            Models = ClearModels;
+        }
+        catch (ApiException e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    private bool FilterFuncInput(LogViewModel model) => FilterFunc(model, SearchString);
+
+    private bool FilterFunc(LogViewModel model, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (model.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (model.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{model.Action.GetAttribute<DisplayAttribute>().Name} {model.LogType.GetAttribute<DisplayAttribute>().Name}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+
+    private async Task UpdateInfo()
+    {
+        await LoadDates();
+    }
 }

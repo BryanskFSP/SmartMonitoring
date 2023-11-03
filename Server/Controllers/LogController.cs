@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using SmartMonitoring.Server.Services;
+using SmartMonitoring.Shared.Models;
 using SmartMonitoring.Shared.ViewModels;
 
 namespace SmartMonitoring.Server.Controllers;
@@ -9,15 +10,15 @@ namespace SmartMonitoring.Server.Controllers;
 [Route("api/[controller]")]
 public class LogController : ControllerBase
 {
-    private SMContext Context;
+    private PSQLService PsqlService;
     private IMapper Mapper;
     private LogService Service;
 
-    public LogController(SMContext context, IMapper mapper, LogService service)
+    public LogController(IMapper mapper, LogService service, PSQLService psqlService)
     {
-        Context = context;
         Mapper = mapper;
         Service = service;
+        PsqlService = psqlService;
     }
 
     [HttpGet]
@@ -27,6 +28,51 @@ public class LogController : ControllerBase
 
         return logs;
     }
+    
+    /// <summary>
+    /// Get Full Telegram Users.
+    /// </summary>
+    /// <returns>List of Telegram Users.</returns>
+    [HttpGet("full")]
+    public async Task<ActionResult<List<TelegramUserViewModel>>> GetFull()
+    {
+        var datas = await Service.GetAllFull();
+        return Ok(datas);
+    }
+
+    [HttpGet("db/{dbid}")]
+    public async Task<ActionResult<List<LogViewModel>>> GetByDBID(Guid dbid)
+    {
+        var logs = await Service.GetAllFull();
+        logs = logs.Where(x => x.DataBaseID == dbid).ToList();
+        
+        return logs;
+    }
+
+    [HttpPost("{id}")]
+    public async Task<ActionResult<ServiceResponse<string>>> FixError(Guid id)
+    {
+        var res = new ServiceResponse<string>();
+
+        var entity = await Service.GetByID(id);
+        if (entity == null)
+        {
+            res.Name = "Сущность не найдена";
+            return NotFound(res);
+        }
+
+        if (entity.Action == ActionType.KillInfinityLoop)
+        {
+            await PsqlService.KillProcess(entity.DataBaseID.Value, entity.EntityID);
+            res.Name = "Процесс успешно убит";
+            res.Status = true;
+            
+            entity = await Service.Fix(id);
+        }
+
+        return res;
+    }
+
 
     [HttpGet("{id}")]
     public async Task<ActionResult<LogViewModel>> GetByID(Guid id)

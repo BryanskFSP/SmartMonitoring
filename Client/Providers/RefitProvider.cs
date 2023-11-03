@@ -33,5 +33,17 @@ public class RefitProvider
 
         services.AddRefitClient<ITelegramUserController>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = apiUrl);
+        
+        services.AddRefitClient<IOrganizationController>(refitSettings)
+            .ConfigureHttpClient(c => c.BaseAddress = apiUrl);
+        
+        services.AddRefitClient<IAdminController>(refitSettings)
+            .ConfigureHttpClient(c => c.BaseAddress = apiUrl);
+        
+        services.AddRefitClient<IDataBaseController>(refitSettings)
+            .ConfigureHttpClient(c => c.BaseAddress = apiUrl);
+        
+        services.AddRefitClient<ILogController>(refitSettings)
+            .ConfigureHttpClient(c => c.BaseAddress = apiUrl);
     }
 }
