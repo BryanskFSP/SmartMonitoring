@@ -40,3 +40,7 @@ services:
 volumes:
   redis-data:
   redis-conf:
+
+networks:
+  proxy:
+    external: true
