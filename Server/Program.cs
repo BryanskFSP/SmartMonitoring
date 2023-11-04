@@ -58,14 +58,14 @@ try
     #region Services
 
     builder.Services.AddScoped<AuthService>();
-    builder.Services.AddScoped<AdminService>();
-    builder.Services.AddScoped<DataBaseService>();
-    builder.Services.AddScoped<InviteService>();
-    builder.Services.AddScoped<LogService>();
-    builder.Services.AddScoped<OrganizationService>();
-    builder.Services.AddScoped<PSQLService>();
-    builder.Services.AddScoped<PSQLCheckerService>();
-    builder.Services.AddScoped<TelegramUserService>();
+    builder.Services.AddTransient<AdminService>();
+    builder.Services.AddTransient<DataBaseService>();
+    builder.Services.AddTransient<InviteService>();
+    builder.Services.AddTransient<LogService>();
+    builder.Services.AddTransient<OrganizationService>();
+    builder.Services.AddTransient<PSQLService>();
+    builder.Services.AddTransient<PSQLCheckerService>();
+    builder.Services.AddTransient<TelegramUserService>();
 
     builder.Services.AddAutoMapper(typeof(Mappings));
 
@@ -146,24 +146,24 @@ try
     app.UseStaticFiles();
 
     app.UseRouting();
-
-    var scope = app.Services.CreateScope().ServiceProvider;
-    var db = scope.GetService<SMContext>();
-    await db.Database.EnsureCreatedAsync();
-    await Task.Delay(1000);
-
+    
     app.MapRazorPages();
     app.MapControllers();
     app.MapFallbackToFile("index.html");
 
     app.MapHub<LogHub>(LogHub.HubURI);
+    
+    var scope = app.Services.CreateScope().ServiceProvider;
+    var db = scope.GetService<SMContext>();
+    await db.Database.EnsureCreatedAsync();
 
+    
     if (!string.IsNullOrWhiteSpace(botUrlStr))
     {
         await scope.GetService<CheckerService>().Start();
     }
 
-    app.Run();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {
