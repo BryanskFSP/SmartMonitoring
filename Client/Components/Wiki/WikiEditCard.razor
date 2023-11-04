@@ -1,0 +1,94 @@
+﻿@using SmartMonitoring.Shared.Extensions
+@using System.ComponentModel.DataAnnotations
+@using SmartMonitoring.Shared.EditModels
+<EditForm Model="@Model" OnValidSubmit="OnValidSumbit">
+    <DataAnnotationsValidator/>
+    <MudGrid>
+        <MudItem>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Название" @bind-Text="Model.Name" @bind-Value="Model.Name" For="() => Model.Name"/>
+                    @* Зона дней недели *@
+                    <MudAutocomplete
+                        @bind-Value="Model.Type"
+                        Label="Тип проблемы"
+                        SearchFunc="@SearchActionType"
+                        ToStringFunc="@(x => x.GetAttribute<DisplayAttribute>().Name)"/>
+                    @* Зона решений *@
+                    <MudFab StartIcon="@Icons.Material.Filled.Add"
+                            Color="Color.Success"
+                            Size="Size.Small" Text="Добавить решение"
+                            Label="Добавить решение"
+                            DisableElevation="true"
+                            OnClick="AddWikiSolution"/>
+                    <MudTable Items="@Model.WikiSolutions" Dense="true"
+                              RowEditPreview="BackupItem"
+                              RowEditCancel="ResetItemToOriginalValues"
+                              CanCancelEdit="true">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Звонки</MudText>
+                            <MudSpacer/>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>
+                                <MudTableSortLabel SortBy="new Func<WikiSolutionEditModel, object>(x => x.Name)">Название</MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>
+                                Описание решения
+                            </MudTh>
+                            <MudTh>
+                                SQL скрипт решения
+                            </MudTh>
+                            <MudTh>
+                                Действие
+                            </MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="call">
+                            <MudTd >@call.Name</MudTd>
+                            <MudTd>@call.Description</MudTd>
+                            <MudTd>@call.SqlScript</MudTd>
+                            <MudTd DataLabel="Действие">
+                                <MudFab Text="Удалить" Label="Удалить"
+                                        Size="Size.Small"
+                                        Color="Color.Error"
+                                        StartIcon="@Icons.Material.Filled.Delete"
+                                        OnClick="() => RemoveWikiSolution(call)"
+                                        DisableElevation="true"/>
+
+                            </MudTd>
+                        </RowTemplate>
+                        <RowEditingTemplate Context="call">
+                            <MudTd>
+                                <MudTextField Label="Название" @bind-Value="call.Name" For="() => call.Name"/>
+                            </MudTd>
+                            <MudTd>
+                                <MudTextField Label="Описание решения" @bind-Value="call.Description" For="() => call.Description"/>
+                            </MudTd>
+                            <MudTd>
+                                <MudTextField Label="SQL скрипт решения" @bind-Value="call.SqlScript" For="() => call.SqlScript"/>
+                            </MudTd>
+                        </RowEditingTemplate>
+                    </MudTable>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudFab ButtonType="ButtonType.Submit"
+                            DisableElevation="true"
+                            StartIcon="@Icons.Material.Filled.Save"
+                            Text="Сохранить"
+                            Color="Color.Primary"/>
+                    <MudFab
+                        Variant="Variant.Filled"
+                        DisableElevation="true"
+                        StartIcon="@Icons.Material.Filled.Filter"
+                        Color="Color.Warning"
+                        Text="Сохранить новым"
+                        Label="Сохранить новым" OnClick="@SaveAsNew"/>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+@code {
+
+}

@@ -48,7 +48,7 @@ try
     // Initialize Redis.
     
     builder.Services.AddStackExchangeRedisCache(options => {
-        options.Configuration = "localhost";
+        options.Configuration = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
         options.InstanceName = "local";
     });
     
@@ -68,6 +68,8 @@ try
     builder.Services.AddTransient<PSQLService>();
     builder.Services.AddTransient<PSQLCheckerService>();
     builder.Services.AddTransient<TelegramUserService>();
+    builder.Services.AddTransient<WikiService>();
+    builder.Services.AddTransient<WikiSolutionService>();
 
     builder.Services.AddAutoMapper(typeof(Mappings));
 

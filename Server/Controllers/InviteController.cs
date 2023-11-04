@@ -115,9 +115,9 @@ public class InviteController : ControllerBase
     
     // POST: api/Invite
     [HttpPost]
-    public async Task<ActionResult<InviteViewModel>> Create()
+    public async Task<ActionResult<InviteViewModel>> Create(InviteEditModel editModel)
     {
-        var data = await Service.Create();
+        var data = await Service.Create(editModel);
         if (data == null)
         {
             return NotFound();

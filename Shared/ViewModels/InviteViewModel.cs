@@ -1,9 +1,12 @@
-﻿namespace SmartMonitoring.Shared.ViewModels;
+﻿
+namespace SmartMonitoring.Shared.ViewModels;
 
 public class InviteViewModel
 {
     public Guid ID { get; set; }
     
+    public int UseCount { get; set; }
+    public int UsedCount { get; set; }
     public string Code { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime ExpireAt { get; set; } = DateTime.Now.AddDays(1);

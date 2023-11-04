@@ -10,6 +10,8 @@ public class SMContext : DbContext
     public DbSet<InviteEntity> Invites => Set<InviteEntity>();
     public DbSet<LogEntity> Logs => Set<LogEntity>();
     public DbSet<OrganizationEntity> Organizations => Set<OrganizationEntity>();
+    public DbSet<WikiEntity> Wikies => Set<WikiEntity>();
+    public DbSet<WikiSolutionEntity> WikiSolutions => Set<WikiSolutionEntity>();
     public DbSet<TelegramUserEntity> TelegramUsers => Set<TelegramUserEntity>();
     
     public SMContext()

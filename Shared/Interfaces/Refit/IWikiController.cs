@@ -14,7 +14,7 @@ public interface IWikiController
     
     [Get("/api/Wiki/{id}")]
     [Headers("Authorization: Bearer")]
-    Task<WikiViewModel> GetByID(long id);
+    Task<WikiViewModel> GetByID(Guid id);
     
     [Post("/api/Wiki")]
     [Headers("Authorization: Bearer")]
@@ -22,9 +22,9 @@ public interface IWikiController
     
     [Put("/api/Wiki/{id}")]
     [Headers("Authorization: Bearer")]
-    Task<WikiViewModel> Update(long id, WikiEditModel Wiki);
+    Task<WikiViewModel> Update(Guid id, WikiEditModel Wiki);
     
     [Delete("/api/Wiki/{id}")]
     [Headers("Authorization: Bearer")]
-    Task Delete(long id);
+    Task Delete(Guid id);
 }

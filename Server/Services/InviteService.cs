@@ -71,7 +71,7 @@ public class InviteService
 
         while (res.Length != 7)
         {
-            var rand = rnd.Next(0, 1) == 0 ? false:true;
+            var rand = rnd.Next(0, 1) == 0 ? false : true;
             if (rand)
             {
                 res.Append(LETTERS[rnd.Next(0, LETTERS.Length - 1)]);
@@ -90,7 +90,7 @@ public class InviteService
     {
         return Context.Invites.AsNoTracking().FirstOrDefault(x => x.Code == code);
     }
-    
+
     public async Task<InviteEntity?> Update(Guid id, InviteEditModel editModel)
     {
         var entity = Mapper.Map<InviteEntity>(editModel);
@@ -110,13 +110,15 @@ public class InviteService
         return entity;
     }
 
-    
-    public async Task<InviteEntity?> Create()
+
+    public async Task<InviteEntity?> Create(InviteEditModel? editModel)
     {
-        var entity = new InviteEntity();
+        var entity = editModel != null ? Mapper.Map<InviteEntity>(editModel) : new InviteEntity();
         var code = await GetCode();
+        entity.UsedCount = 0;
+        entity.Code = code;
         // TODO проверки
-        
+
         Context.Add((object)entity);
 
         await Context.SaveChangesAsync();
@@ -137,6 +139,4 @@ public class InviteService
 
         return true;
     }
-    
-    
 }
