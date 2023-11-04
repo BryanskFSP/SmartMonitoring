@@ -86,12 +86,30 @@ public class InviteService
     }
 
 
-    private async Task<bool> IsUniqueCode(string code)
+    public async Task<InviteEntity> GetByCode(string code)
     {
-        var invite = Context.Invites.FirstOrDefault(x => x.Code == code);
-        return invite == null;
+        return Context.Invites.AsNoTracking().FirstOrDefault(x => x.Code == code);
     }
     
+    public async Task<InviteEntity?> Update(Guid id, InviteEditModel editModel)
+    {
+        var entity = Mapper.Map<InviteEntity>(editModel);
+        entity.ID = id;
+
+        // TODO проверки
+
+        Context.Attach(entity);
+        Context.Entry(entity).State = EntityState.Modified;
+        Context.Entry(entity).Property(x => x.CreatedAt).IsModified = false;
+        Context.Entry(entity).Property(x => x.Code).IsModified = false;
+        Context.Entry(entity).Property(x => x.OrganizationID).IsModified = false;
+        Context.Entry(entity).Property(x => x.OrganizationID).IsModified = false;
+
+        await Context.SaveChangesAsync();
+
+        return entity;
+    }
+
     
     public async Task<InviteEntity?> Create()
     {
@@ -119,4 +137,6 @@ public class InviteService
 
         return true;
     }
+    
+    
 }

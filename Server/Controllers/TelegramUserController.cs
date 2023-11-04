@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartMonitoring.Server.Services;
 using SmartMonitoring.Shared.EditModels;
@@ -17,14 +11,15 @@ namespace SmartMonitoring.Server.Controllers;
 public class TelegramUserController : ControllerBase
 {
     private TelegramUserService Service;
+    private InviteService InviteService;
     private IMapper Mapper;
 
-    public TelegramUserController(TelegramUserService service, IMapper mapper)
+    public TelegramUserController(TelegramUserService service, IMapper mapper, InviteService inviteService)
     {
         Service = service;
         Mapper = mapper;
+        InviteService = inviteService;
     }
-
     
     /// <summary>
     /// Get Telegram Users.
@@ -127,11 +122,22 @@ public class TelegramUserController : ControllerBase
     /// <summary>
     /// Create Telegram User.
     /// </summary>
+    /// <param name="inviteCode">Invite code.</param>
     /// <param name="editModel">Edit model of Telegram User.</param>
     /// <returns>View model of Telegram User.</returns>
     [HttpPost]
-    public async Task<ActionResult<TelegramUserViewModel>> Create([FromBody] TelegramUserEditModel editModel)
+    public async Task<ActionResult<TelegramUserViewModel>> Create(string inviteCode, [FromBody] TelegramUserEditModel editModel)
     {
+        var invite = await InviteService.GetByCode(inviteCode);
+        if (invite == null)
+        {
+            return Forbid();
+        }
+
+        var inveditModel = Mapper.Map<InviteEditModel>(inviteCode);
+        inveditModel.UsedCount += 1;
+        await InviteService.Update(invite.ID, inveditModel);
+        
         var data = await Service.Create(editModel);
         if (data == null)
         {
