@@ -23,7 +23,7 @@ public class PSQLController: ControllerBase
     /// <param name="dbID">ID Database.</param>
     /// <returns></returns>
     [HttpGet]
-    public async Task<ActionResult<List<PGStatActivityModel>>> GetStates(Guid dbID)
+    public async Task<ActionResult<ServiceResponse<List<PGStatActivityModel>>>> GetStates(Guid dbID)
     {
         var datas = await Service.GetModelsActive(dbID);
 
