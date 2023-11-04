@@ -253,7 +253,7 @@ public class PSQLService
 
         using var cmd = new NpgsqlCommand(sql, connection);
 
-        cmd.ExecuteNonQuery();
+        await (await cmd.ExecuteReaderAsync()).CloseAsync();
 
         await connection.CloseAsync();
     }
