@@ -7,44 +7,78 @@ using SmartMonitoring.Shared.Interfaces;
 
 namespace SmartMonitoring.Server.Services;
 
+/// <summary>
+/// Admin service section.
+/// </summary>
 public class AdminService : IService<AdminEntity, AdminEditModel, Guid>
 {
     private SMContext Context;
     private IMapper Mapper;
 
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="context">Context DB.</param>
+    /// <param name="mapper">Mapper.</param>
     public AdminService(SMContext context, IMapper mapper)
     {
         Context = context;
         Mapper = mapper;
     }
 
+    /// <summary>
+    /// Get Admin by Login.
+    /// </summary>
+    /// <param name="login"></param>
+    /// <returns></returns>
     public AdminEntity? GetByLogin(string login)
     {
         return Context.Admins.AsNoTracking().AsEnumerable().FirstOrDefault(x =>
             (x.Login?.Equals(login) ?? false));
     }
     
+    /// <summary>
+    /// Get all Admins.
+    /// </summary>
+    /// <returns></returns>
     public List<AdminEntity> GetAll()
     {
         return Context.Admins.AsNoTracking().ToList();
     }
 
+    /// <summary>
+    /// Get hash by all Admins.
+    /// </summary>
+    /// <returns></returns>
     public string GetAllHash()
     {
         return GetAll().ToHashSHA256();
     }
 
+    /// <summary>
+    /// Get all Full admins.
+    /// </summary>
+    /// <returns></returns>
     public List<AdminEntity> GetAllFull()
     {
         return Context.Admins.AsNoTracking()
             .ToList();
     }
 
+    /// <summary>
+    /// Get hash by all Full admins.
+    /// </summary>
+    /// <returns></returns>
     public string GetAllFullHash()
     {
         return GetAllFull().ToHashSHA256();
     }
 
+    /// <summary>
+    /// Get Admin by ID.
+    /// </summary>
+    /// <param name="id">Admin ID.</param>
+    /// <returns></returns>
     public async Task<AdminEntity?> GetByID(Guid id)
     {
         return await Context.Admins.AsNoTracking()

@@ -2,6 +2,8 @@
 @page "/admin/index"
 @page "/admin/main"
 
+@layout AdminLayout
+
 <PageTitle>Страница администратора</PageTitle>
 
 <MudGrid>
@@ -25,7 +27,7 @@
         <a href="admin/databases">
             <MudPaper Class="pa-3" Elevation="0" Outlined="true">
                 <MudStack Row="true">
-                    <MudIcon Icon="@Icons.Material.Filled.VolunteerActivism"/>
+                    <MudIcon Icon="@Icons.Material.Filled.Dataset"/>
                 </MudStack>
                 <MudText>Открыть базы данных</MudText>
             </MudPaper>

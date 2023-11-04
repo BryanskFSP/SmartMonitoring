@@ -8,7 +8,7 @@ namespace SmartMonitoring.Client.Pages.Admin.Admins;
 
 public partial class AdminsPage
 {
-   [Inject] private ISnackbar Snackbar { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
     [Inject] private IDialogService DialogService { get; set; }
     [Inject] private IAdminController ModelController { get; set; }
 
@@ -59,5 +59,5 @@ public partial class AdminsPage
             .Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
         return false;
-    } 
+    }
 }

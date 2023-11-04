@@ -7,6 +7,8 @@
 @using SmartMonitoring.Shared.Models
 @using SmartMonitoring.Shared.ViewModels
 
+@layout AdminLayout
+
 <PageTitle>Логи</PageTitle>
 
 <MudGrid>
@@ -149,12 +151,18 @@
         await LoadDates();
         
         LogHubClient.OnAddEvent += OnAdd;
+        LogHubClient.OnAddIDEvent += OnAddID;
     }
 
     private async Task OnAdd(LogViewModel log)
     {
         Snackbar.Add("New Add Event!");
         Models.Add(log);
+    }
+
+    private async Task OnAddID(Guid id)
+    {
+        Snackbar.Add("New Add ID Event!");
     }
 
     private async Task LoadDates()
