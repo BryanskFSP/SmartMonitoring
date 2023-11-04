@@ -109,6 +109,12 @@ namespace SmartMonitoring.Server.Migrations
                     b.Property<Guid>("OrganizationID")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("UseCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("integer");
+
                     b.HasKey("ID");
 
                     b.HasIndex("Code")
@@ -187,8 +193,11 @@ namespace SmartMonitoring.Server.Migrations
 
             modelBuilder.Entity("SmartMonitoring.Server.Entities.TelegramUserEntity", b =>
                 {
-                    b.Property<int>("TelegramID")
-                        .HasColumnType("integer");
+                    b.Property<long>("TelegramID")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("AdminID")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -206,6 +215,8 @@ namespace SmartMonitoring.Server.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("TelegramID");
+
+                    b.HasIndex("AdminID");
 
                     b.HasIndex("OrganizationID");
 
@@ -265,11 +276,17 @@ namespace SmartMonitoring.Server.Migrations
 
             modelBuilder.Entity("SmartMonitoring.Server.Entities.TelegramUserEntity", b =>
                 {
+                    b.HasOne("SmartMonitoring.Server.Entities.AdminEntity", "Admin")
+                        .WithMany()
+                        .HasForeignKey("AdminID");
+
                     b.HasOne("SmartMonitoring.Server.Entities.OrganizationEntity", "Organization")
                         .WithMany("TelegramUsers")
                         .HasForeignKey("OrganizationID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Admin");
 
                     b.Navigation("Organization");
                 });

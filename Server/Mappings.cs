@@ -37,5 +37,13 @@ public class Mappings: Profile
         CreateMap<LogViewModel, LogEditModel>().ReverseMap();
         CreateMap<LogEditModel, LogEntity>().ReverseMap();
         CreateMap<LogViewModel, LogEntity>().ReverseMap();
+        
+        CreateMap<WikiViewModel, WikiEditModel>().ReverseMap();
+        CreateMap<WikiEditModel, WikiEntity>().ReverseMap();
+        CreateMap<WikiViewModel, WikiEntity>().ReverseMap();
+
+        CreateMap<WikiSolutionViewModel, WikiSolutionEditModel>().ReverseMap();
+        CreateMap<WikiSolutionEditModel, WikiSolutionEntity>().ReverseMap();
+        CreateMap<WikiSolutionViewModel, WikiSolutionEntity>().ReverseMap();
     }
 }

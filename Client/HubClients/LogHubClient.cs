@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR.Client;
+using Serilog;
 using SmartMonitoring.Shared.ViewModels;
 
 namespace SmartMonitoring.Client.HubClients;
@@ -10,8 +11,10 @@ public class LogHubClient
     private readonly HubConnection Hub;
 
     public delegate Task OnAdd(LogViewModel log);
+    public delegate Task OnAddID(Guid id);
 
     public event OnAdd OnAddEvent;
+    public event OnAddID OnAddIDEvent;
 
     public LogHubClient(Uri uri)
     {
@@ -25,23 +28,24 @@ public class LogHubClient
         Hub.Reconnecting += OnReconnecting;
 
         Hub.On("Add", async (LogViewModel log) => await OnAddEvent(log));
+        Hub.On("AddID", async (Guid id) => await OnAddIDEvent(id));
 
         StartConnection();
     }
 
     private async Task OnClosed(Exception exception)
     {
-        Console.WriteLine($"[{DateTime.Now.ToString()}] WebSocket die!");
+        Log.Information($"[{DateTime.Now.ToString()}] WebSocket die!");
     }
 
     private async Task OnReconnected(string connectionId)
     {
-        Console.WriteLine($"[{DateTime.Now.ToString()}] WebSocket reconnected!");
+        Log.Information($"[{DateTime.Now.ToString()}] WebSocket reconnected!");
     }
 
     private async Task OnReconnecting(Exception exception)
     {
-        Console.WriteLine($"[{DateTime.Now.ToString()}] WebSocket reconnecting...");
+        Log.Information($"[{DateTime.Now.ToString()}] WebSocket reconnecting...");
     }
 
     public void StartConnection()
@@ -52,6 +56,6 @@ public class LogHubClient
     public async Task StartConnectionAsync()
     {
         await Hub.StartAsync();
-        Console.WriteLine(Hub.State.ToString("G"));
+        Log.Verbose(Hub.State.ToString("G"));
     }
 }

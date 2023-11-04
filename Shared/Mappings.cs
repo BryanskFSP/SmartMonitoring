@@ -13,5 +13,7 @@ public class Mappings: Profile
         CreateMap<InviteViewModel, InviteEditModel>().ReverseMap();
         CreateMap<OrganizationViewModel, OrganizationEditModel>().ReverseMap();
         CreateMap<TelegramUserViewModel, TelegramUserEditModel>().ReverseMap();
+        CreateMap<WikiViewModel, WikiEditModel>().ReverseMap();
+        CreateMap<WikiSolutionViewModel, WikiSolutionEditModel>().ReverseMap();
     }
 }

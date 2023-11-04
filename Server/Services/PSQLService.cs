@@ -207,7 +207,7 @@ public class PSQLService
 
         await connection.CloseAsync();
     }
-    
+
     /// <summary>
     /// Clear space in DB.
     /// </summary>
@@ -234,6 +234,31 @@ public class PSQLService
     }
     
     /// <summary>
+    /// Clear space by vacuum in DB.
+    /// </summary>
+    /// <param name="dbID">DB ID</param>
+    public async Task ClearSpaceByVacuum(Guid dbID)
+    {
+        var res = new ServiceResponse<string>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var sql = $"VACUUM FULL;";
+
+        using var cmd = new NpgsqlCommand(sql, connection);
+
+        var result = cmd.ExecuteScalar().ToString();
+
+        await connection.CloseAsync();
+    }
+
+    /// <summary>
     /// Create infitity loop
     /// </summary>
     /// <param name="dbID">DB ID</param>
@@ -253,7 +278,7 @@ public class PSQLService
 
         using var cmd = new NpgsqlCommand(sql, connection);
 
-        await (await cmd.ExecuteReaderAsync()).CloseAsync();
+        await Task.Run(async () => await (await cmd.ExecuteReaderAsync()).CloseAsync());
 
         await connection.CloseAsync();
     }
@@ -410,6 +435,249 @@ $$;");
         cmd.ExecuteNonQuery();
 
         await connection.CloseAsync();
+
+        return res;
+    }
+
+    /// <summary>
+    /// Get blocked processes in DB.
+    /// </summary>
+    /// <param name="dbID">DB ID.</param>
+    /// <returns>List of Processes.</returns>
+    public async Task<ServiceResponse<List<PSQLLockModel>>> GetLockProcesses(Guid dbID)
+    {
+        var res = new ServiceResponse<List<PSQLLockModel>>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return null;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var ress = new List<PSQLLockModel>();
+
+        string sql =
+            @"SELECT COALESCE(blockingl.relation::regclass::text, blockingl.locktype) AS locked_item,
+       now() - blockeda.query_start                                     AS waiting_duration,
+       blockeda.pid                                                     AS blocked_pid,
+       blockeda.query                                                   AS blocked_query,
+       blockedl.mode                                                    AS blocked_mode
+FROM pg_locks blockedl
+JOIN pg_stat_activity blockeda ON blockedl.pid = blockeda.pid
+JOIN pg_locks blockingl ON (blockingl.transactionid = blockedl.transactionid OR
+                            blockingl.relation = blockedl.relation AND
+                            blockingl.locktype = blockedl.locktype) AND blockedl.pid <> blockingl.pid
+JOIN pg_stat_activity blockinga ON blockingl.pid = blockinga.pid AND blockinga.datid = blockeda.datid
+WHERE NOT blockedl.granted AND blockinga.datname = current_database();
+";
+        var cmd = new NpgsqlCommand(sql, connection);
+
+        using NpgsqlDataReader rdr = cmd.ExecuteReader();
+
+        while (rdr.Read())
+        {
+            var model = new PSQLLockModel()
+            {
+                LockedItem = rdr.GetString(0),
+                WarningDuration = rdr.GetInt64(1),
+                BlockedPID = rdr.GetInt32(2),
+                BlockedQuery = rdr.GetString(3),
+                BlockedMode = rdr.GetString(4),
+            };
+            ress.Add(model);
+        }
+
+        await rdr.CloseAsync();
+
+        await connection.CloseAsync();
+        res.Data = ress;
+        return res;
+    }
+
+    /// <summary>
+    /// Get indexes stats in DB.
+    /// </summary>
+    /// <param name="dbID">DB ID.</param>
+    /// <returns>List of Indexes.</returns>
+    public async Task<ServiceResponse<List<IndexModel>>> GetIndexesStats(Guid dbID)
+    {
+        var res = new ServiceResponse<List<IndexModel>>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return null;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var ress = new List<IndexModel>();
+
+        string sql =
+            @"SELECT 
+   relname, 
+   seq_scan, 
+   idx_scan, 
+   idx_scan/seq_scan as IndexStat
+FROM pg_stat_user_tables
+WHERE seq_scan <> 0
+ORDER BY IndexStat DESC;
+";
+        var cmd = new NpgsqlCommand(sql, connection);
+
+        using NpgsqlDataReader rdr = cmd.ExecuteReader();
+
+        while (rdr.Read())
+        {
+            var model = new IndexModel()
+            {
+                RelName = rdr.GetString(0),
+                SeqScan = rdr.GetInt64(1),
+                IdxScan = rdr.GetInt64(2),
+                IndexStat = rdr.GetInt64(3)
+            };
+            ress.Add(model);
+        }
+
+        await rdr.CloseAsync();
+
+        await connection.CloseAsync();
+        res.Data = ress;
+        return res;
+    }
+    
+    /// <summary>
+    /// Get outdated index stats in DB.
+    /// </summary>
+    /// <param name="dbID">DB ID.</param>
+    /// <returns>List of outdated Indexes.</returns>
+    public async Task<ServiceResponse<List<OutdatedIndexModel>>> GetOutdatedIndexesStats(Guid dbID)
+    {
+        var res = new ServiceResponse<List<OutdatedIndexModel>>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return null;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var ress = new List<OutdatedIndexModel>();
+
+        string sql =
+            @"SELECT 
+   indexrelname, 
+   relname, 
+   idx_tup_read/idx_tup_fetch as stats
+FROM pg_stat_user_indexes
+WHERE idx_tup_fetch <> 0
+ORDER BY stats DESC;
+";
+        var cmd = new NpgsqlCommand(sql, connection);
+
+        using NpgsqlDataReader rdr = cmd.ExecuteReader();
+
+        while (rdr.Read())
+        {
+            var model = new OutdatedIndexModel()
+            {
+                Indexrelname = rdr.GetString(0),
+                Relname = rdr.GetString(1),
+                Stats = rdr.GetInt64(2),
+            };
+            ress.Add(model);
+        }
+
+        await rdr.CloseAsync();
+
+        await connection.CloseAsync();
+        res.Data = ress;
+        return res;
+    }
+
+    /// <summary>
+    /// Get DB Wasted bytes.
+    /// </summary>
+    /// <param name="dataBaseID">Database ID.</param>
+    /// <returns></returns>
+    public async Task<ServiceResponse<decimal>> GetWastedBytes(Guid dataBaseID)
+    {
+        var res = new ServiceResponse<decimal>();
+        var dataBase = await DBService.GetByID(dataBaseID);
+        if (dataBase == null)
+        {
+            return null;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var sql = $@"SELECT
+  CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::BIGINT END AS wastedbytes
+FROM (
+  SELECT
+    schemaname, tablename, cc.reltuples, cc.relpages, bs,
+    CEIL((cc.reltuples*((datahdr+ma-
+      (CASE WHEN datahdr%ma=0 THEN ma ELSE datahdr%ma END))+nullhdr2+4))/(bs-20::float)) AS otta,
+    COALESCE(c2.relname,'?') AS iname, COALESCE(c2.reltuples,0) AS ituples, COALESCE(c2.relpages,0) AS ipages,
+    COALESCE(CEIL((c2.reltuples*(datahdr-12))/(bs-20::float)),0) AS iotta /* very rough approximation, assumes all cols */
+  FROM (
+    SELECT
+      ma,bs,schemaname,tablename,
+      (datawidth+(hdr+ma-(case when hdr%ma=0 THEN ma ELSE hdr%ma END)))::numeric AS datahdr,
+      (maxfracsum*(nullhdr+ma-(case when nullhdr%ma=0 THEN ma ELSE nullhdr%ma END))) AS nullhdr2
+    FROM (
+      SELECT
+        schemaname, tablename, hdr, ma, bs,
+        SUM((1-null_frac)*avg_width) AS datawidth,
+        MAX(null_frac) AS maxfracsum,
+        hdr+(
+          SELECT 1+count(*)/8
+          FROM pg_stats s2
+          WHERE null_frac<>0 AND s2.schemaname = s.schemaname AND s2.tablename = s.tablename
+        ) AS nullhdr
+      FROM pg_stats s, (
+        SELECT
+          (SELECT current_setting('block_size')::numeric) AS bs,
+          CASE WHEN substring(v,12,3) IN ('8.0','8.1','8.2') THEN 27 ELSE 23 END AS hdr,
+          CASE WHEN v ~ 'mingw32' THEN 8 ELSE 4 END AS ma
+        FROM (SELECT version() AS v) AS foo
+      ) AS constants
+      GROUP BY 1,2,3,4,5
+    ) AS foo
+  ) AS rs
+  JOIN pg_class cc ON cc.relname = rs.tablename
+  JOIN pg_namespace nn ON cc.relnamespace = nn.oid AND nn.nspname = rs.schemaname AND nn.nspname <> 'information_schema'
+  LEFT JOIN pg_index i ON indrelid = cc.oid
+  LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid
+) AS sml
+ORDER BY wastedbytes DESC limit 1;
+";
+
+        try
+        {
+            using var cmd = new NpgsqlCommand(sql, connection);
+
+            using var dataReader = cmd.ExecuteReader();
+            while (dataReader.Read())
+            {
+                var data = dataReader.GetDecimal(0);
+                res.Data = data;
+            }
+
+            dataReader.Close();
+            await connection.CloseAsync();
+            res.Status = true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            res.Status = false;
+            return res;
+        }
 
         return res;
     }

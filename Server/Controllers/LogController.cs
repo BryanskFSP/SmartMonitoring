@@ -10,15 +10,13 @@ namespace SmartMonitoring.Server.Controllers;
 [Route("api/[controller]")]
 public class LogController : ControllerBase
 {
-    private PSQLService PsqlService;
     private IMapper Mapper;
     private LogService Service;
 
-    public LogController(IMapper mapper, LogService service, PSQLService psqlService)
+    public LogController(IMapper mapper, LogService service)
     {
         Mapper = mapper;
         Service = service;
-        PsqlService = psqlService;
     }
 
     [HttpGet]
@@ -57,30 +55,7 @@ public class LogController : ControllerBase
     [HttpPost("{id}")]
     public async Task<ActionResult<ServiceResponse<string>>> FixError(Guid id)
     {
-        var res = new ServiceResponse<string>();
-
-        var entity = await Service.GetByID(id);
-        if (entity == null)
-        {
-            res.Name = "Сущность не найдена";
-            return NotFound(res);
-        }
-
-        if (entity.Action == ActionType.KillInfinityLoop)
-        {
-            await PsqlService.KillProcess(entity.DataBaseID.Value, entity.EntityID);
-            res.Name = "Процесс успешно убит";
-            res.Status = true;
-            
-            entity = await Service.Fix(id);
-        }
-        else if (entity.Action == ActionType.NoSpace)
-        {
-            await PsqlService.ClearSpace(entity.DataBaseID.Value);
-            res.Name = "Очистка началась!";
-            res.Status = true;
-            entity = await Service.Fix(id);
-        }
+        var res = await Service.FixError(id);
 
         return res;
     }

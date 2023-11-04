@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Serilog;
 
 namespace SmartMonitoring.Server.Hubs;
 
@@ -12,17 +13,17 @@ public class LogHub: Hub
     /// <returns></returns>
     public override Task OnConnectedAsync()
     {
-        Console.WriteLine($"{Context.ConnectionId} connected {DateTime.Now}");
+        Log.Information($"{Context.ConnectionId} connected {DateTime.Now}");
         return base.OnConnectedAsync();
     }
 
     /// <summary>
     /// On disconnected async handler.
     /// </summary>
-    /// <param name="exception"></param>
+    /// <param name="exception">Exception.</param>
     public override Task OnDisconnectedAsync(Exception? exception)
     {
-        Console.WriteLine($"{Context.ConnectionId} disconnected {DateTime.Now}");
+        Log.Information(exception, $"{Context.ConnectionId} disconnected {DateTime.Now}");
         return base.OnDisconnectedAsync(exception);
     }
 }

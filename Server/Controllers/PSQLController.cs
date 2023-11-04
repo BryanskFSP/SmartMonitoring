@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SmartMonitoring.Server.Services;
 using SmartMonitoring.Shared.Models;
@@ -10,12 +11,10 @@ namespace SmartMonitoring.Server.Controllers;
 public class PSQLController: ControllerBase
 {
     private PSQLService Service;
-    private IMapper Mapper;
 
-    public PSQLController(PSQLService service, IMapper mapper)
+    public PSQLController(PSQLService service)
     {
         Service = service;
-        Mapper = mapper;
     }
     
     /// <summary>
@@ -59,6 +58,32 @@ public class PSQLController: ControllerBase
     }
     
     /// <summary>
+    /// Get Caching ratio from Main DB.
+    /// </summary>
+    /// <param name="dbID">ID Database.</param>
+    /// <returns></returns>
+    [HttpGet("tables/cachingratio")]
+    public async Task<ActionResult<ServiceResponse<decimal>>> GetCachingRatio(Guid dbID)
+    {
+        var datas = await Service.GetCachingRatio(dbID);
+
+        return datas;
+    }
+    
+    /// <summary>
+    /// Get Caching indexes ratio from Main DB.
+    /// </summary>
+    /// <param name="dbID">ID Database.</param>
+    /// <returns></returns>
+    [HttpGet("tables/cachingindexesratio")]
+    public async Task<ActionResult<ServiceResponse<decimal>>> GetCachingIndexesRatio(Guid dbID)
+    {
+        var datas = await Service.GetCachingIndexesRatio(dbID);
+
+        return datas;
+    }
+    
+    /// <summary>
     /// Kill State in Main DB.
     /// </summary>
     /// <param name="dbID">ID Database.</param>
@@ -83,4 +108,84 @@ public class PSQLController: ControllerBase
 
         return Ok();
     }
+    
+    /// <summary>
+    /// Clear Space in DataBase.
+    /// </summary>
+    /// <param name="dbID">ID Database.</param>
+    /// <returns></returns>
+    [HttpPost("space/clear")]
+    public async Task<IActionResult> ClearSpace(Guid dbID)
+    {
+        await Service.ClearSpace(dbID);
+        return Ok();
+    }
+    
+    /// <summary>
+    /// Clear Space by vacuum in DataBase.
+    /// </summary>
+    /// <param name="dbID">ID Database.</param>
+    /// <returns></returns>
+    [HttpPost("space/clear/vacuum")]
+    public async Task<IActionResult> ClearSpaceByVacuum(Guid dbID)
+    {
+        await Service.ClearSpaceByVacuum(dbID);
+        return Ok();
+    }
+
+    /// <summary>
+    /// Get blocked Processes in DataBase.
+    /// </summary>
+    /// <param name="dbID">ID Database.</param>
+    /// <returns></returns>
+    [HttpPost("processes/locked")]
+    public async Task<ActionResult<ServiceResponse<List<PSQLLockModel>>>> GetLockProcesses(Guid dbID)
+    {
+        var res = await Service.GetLockProcesses(dbID);
+        return res;
+    }
+    
+    
+    /// <summary>
+    /// Get indexes stats in DataBase.
+    /// </summary>
+    /// <param name="dbID">ID Database.</param>
+    /// <returns></returns>
+    [HttpPost("stats/indexes")]
+    public async Task<ActionResult<ServiceResponse<List<IndexModel>>>> GetIndexesStats(Guid dbID)
+    {
+        var res = await Service.GetIndexesStats(dbID);
+        return res;
+    }
+    
+    /// <summary>
+    /// Get outdated indexes stats in DataBase.
+    /// </summary>
+    /// <param name="dbID">ID Database.</param>
+    /// <returns></returns>
+    [HttpPost("stats/indexes/outdated")]
+    public async Task<ActionResult<ServiceResponse<List<OutdatedIndexModel>>>> GetOutdatedIndexesStats(Guid dbID)
+    {
+        var res = await Service.GetOutdatedIndexesStats(dbID);
+        return res;
+    }
+    
+    /// <summary>
+    /// Get wasted bytes in DataBase.
+    /// </summary>
+    /// <param name="dbID">ID Database.</param>
+    /// <returns></returns>
+    [HttpPost("wasted")]
+    public async Task<ActionResult<ServiceResponse<decimal>>> GetWastedBytes(Guid dbID)
+    {
+        var res = await Service.GetWastedBytes(dbID);
+        return res;
+    }
+
+
+}
+
+public class DataBaseStatsModel
+{
+    // TODO все данные статистики
 }
