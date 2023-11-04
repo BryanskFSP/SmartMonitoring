@@ -1,8 +1,6 @@
 using Quartz;
 using SmartMonitoring.Server.Entities;
 using SmartMonitoring.Server.Services;
-using SmartMonitoring.Shared.EditModels;
-using SmartMonitoring.Shared.Interfaces.Refit;
 using SmartMonitoring.Shared.Models;
 
 namespace SmartMonitoring.Server.Jobs;
@@ -11,18 +9,15 @@ public class CheckerJob : IJob
 {
     private PSQLService PsqlService;
     private DataBaseService DBService;
-    private LogService LogService;
     private PSQLCheckerService PsqlCheckerService;
 
     private List<DataBaseEntity> DataBases = new();
-    private List<TelegramUserEntity> TelegramUsers = new();
 
-    public CheckerJob(PSQLService psqlService, DataBaseService dbService, LogService logService,
+    public CheckerJob(PSQLService psqlService, DataBaseService dbService,
         PSQLCheckerService psqlCheckerService)
     {
         PsqlService = psqlService;
         DBService = dbService;
-        LogService = logService;
         PsqlCheckerService = psqlCheckerService;
     }
 

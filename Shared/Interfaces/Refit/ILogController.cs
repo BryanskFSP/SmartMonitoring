@@ -14,8 +14,8 @@ public interface ILogController
     [Get("/api/Log/db/{dbid}")]
     Task<List<LogViewModel>> GetByDBID(Guid dbid);
     
-    [Post("/api/Log/{dbid}")]
-    Task<ServiceResponse<string>> FixError(Guid dbid);
+    [Post("/api/Log/{id}")]
+    Task<ServiceResponse<string>> FixError(Guid id);
     
     [Get("/api/Log/{id}")]
     Task<LogViewModel> GetByID(Guid id);

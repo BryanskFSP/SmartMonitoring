@@ -128,6 +128,7 @@ public class PSQLCheckerService
 
         await LogService.Add(log);
 
+        res.Status = true;
         return res;
     }
 
@@ -135,7 +136,7 @@ public class PSQLCheckerService
     /// Checking Caching Ratio by DataBase.
     /// </summary>
     /// <param name="entity">DataBase entity.</param>
-    public async Task CheckingCachingRatio(DataBaseEntity entity)
+    public async Task<ServiceResponse<decimal>> CheckingCachingRatio(DataBaseEntity entity)
     {
         var cachingRatioValue = Values.FirstOrDefault(x => x.Type == ReferenceType.CachingRatio).Value;
         var cachingRatio = await PsqlService.GetCachingRatio(entity.ID);
@@ -158,6 +159,7 @@ public class PSQLCheckerService
         }
 
         await LogService.Add(log);
+        return cachingRatio;
     }
 
     /// <summary>
@@ -187,6 +189,7 @@ public class PSQLCheckerService
             log.Description = $"На сервере плохо с кэшированием индексов: {cachingIndexesRatio.Data} процентов!";
         }
 
+        
         await LogService.Add(log);
         return cachingIndexesRatio;
     }

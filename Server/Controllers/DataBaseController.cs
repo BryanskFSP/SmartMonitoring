@@ -24,7 +24,8 @@ public class DataBaseController : ControllerBase
     private LogService LogService;
     private IMapper Mapper;
 
-    public DataBaseController(DataBaseService service, IMapper mapper, PSQLService psqlService, PSQLCheckerService psqlCheckerService, LogService logService)
+    public DataBaseController(DataBaseService service, IMapper mapper, PSQLService psqlService,
+        PSQLCheckerService psqlCheckerService, LogService logService)
     {
         Service = service;
         Mapper = mapper;
@@ -128,9 +129,9 @@ public class DataBaseController : ControllerBase
     [HttpPost("{id}/check/full")]
     public async Task<ActionResult<ServiceResponse<string>>> CheckFull(Guid id)
     {
-        var res =new ServiceResponse<string>();
+        var res = new ServiceResponse<string>();
         var sb = new StringBuilder();
-        
+
         var data = await Service.GetByID(id);
         if (data == null)
         {
@@ -144,7 +145,7 @@ public class DataBaseController : ControllerBase
 
         return res;
     }
-    
+
     /// <summary>
     /// Starting a check memory in DataBase.
     /// </summary>
@@ -153,9 +154,9 @@ public class DataBaseController : ControllerBase
     [HttpPost("{id}/check/memory")]
     public async Task<ActionResult<ServiceResponse<string>>> CheckMemory(Guid id, MemoryType memoryType)
     {
-        var res =new ServiceResponse<string>();
+        var res = new ServiceResponse<string>();
         var sb = new StringBuilder();
-        
+
         var data = await Service.GetByID(id);
         if (data == null)
         {
@@ -166,7 +167,7 @@ public class DataBaseController : ControllerBase
 
         return res;
     }
-    
+
     /// <summary>
     /// Starting a check states in DataBase.
     /// </summary>
@@ -175,9 +176,9 @@ public class DataBaseController : ControllerBase
     [HttpPost("{id}/check/states")]
     public async Task<ActionResult<ServiceResponse<string>>> CheckStates(Guid id)
     {
-        var res =new ServiceResponse<string>();
+        var res = new ServiceResponse<string>();
         var sb = new StringBuilder();
-        
+
         var data = await Service.GetByID(id);
         if (data == null)
         {
@@ -188,47 +189,47 @@ public class DataBaseController : ControllerBase
 
         return res;
     }
-    
+
     /// <summary>
     /// Starting a check Caching Ratio in DataBase.
     /// </summary>
     /// <param name="id"></param>
     /// <returns>No content</returns>
     [HttpPost("{id}/check/cachingratio")]
-    public async Task<ActionResult<ServiceResponse<string>>> CheckCachingRatio(Guid id)
+    public async Task<ActionResult<ServiceResponse<decimal>>> CheckCachingRatio(Guid id)
     {
-        var res =new ServiceResponse<string>();
+        var res = new ServiceResponse<decimal>();
         var sb = new StringBuilder();
-        
+
         var data = await Service.GetByID(id);
         if (data == null)
         {
             return NotFound();
         }
 
-        await PsqlCheckerService.CheckingCachingRatio(data);
+        res = await PsqlCheckerService.CheckingCachingRatio(data);
 
         return res;
     }
-    
+
     /// <summary>
     /// Starting a check Caching Indexes Ratio in DataBase.
     /// </summary>
     /// <param name="id"></param>
     /// <returns>No content</returns>
     [HttpPost("{id}/check/cachingindexesratio")]
-    public async Task<ActionResult<ServiceResponse<string>>> CheckCachingIndexesRatio(Guid id)
+    public async Task<ActionResult<ServiceResponse<decimal>>> CheckCachingIndexesRatio(Guid id)
     {
-        var res =new ServiceResponse<string>();
+        var res = new ServiceResponse<decimal>();
         var sb = new StringBuilder();
-        
+
         var data = await Service.GetByID(id);
         if (data == null)
         {
             return NotFound();
         }
 
-        await PsqlCheckerService.CheckingCachingIndexesRatio(data);
+        res = await PsqlCheckerService.CheckingCachingIndexesRatio(data);
 
         return res;
     }
@@ -236,17 +237,17 @@ public class DataBaseController : ControllerBase
     [HttpPost("{id}/fix/full")]
     public async Task<ActionResult<ServiceResponse<string>>> FullFix(Guid id)
     {
-        var res =new ServiceResponse<string>();
+        var res = new ServiceResponse<string>();
         var sb = new StringBuilder();
-                  var data = await Service.GetByID(id);
+        var data = await Service.GetByID(id);
         if (data == null)
         {
             return NotFound();
         }
 
         var logs = await LogService.GetAllByDataBaseID(id);
-        
-        foreach (var log in logs.Where(x=>x.FixStatus == false && x.LogType >= LogType.Error))
+
+        foreach (var log in logs.Where(x => x.FixStatus == false && x.LogType >= LogType.Error))
         {
             var result = await LogService.FixError(log.ID);
             sb.AppendLine(result.Data);

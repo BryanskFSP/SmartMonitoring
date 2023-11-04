@@ -2,8 +2,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Quartz;
 using Serilog;
 using SmartMonitoring.Server;
 using SmartMonitoring.Server.Hubs;
@@ -72,8 +74,6 @@ try
     var botUrlStr = Environment.GetEnvironmentVariable("BOT_URL") ?? "http://localhost:3000";
     RefitProvider.AddRefitInterfaces(builder.Services, new Uri(botUrlStr));
 
-    builder.Services.AddTransient<CheckerService>();
-    builder.Services.AddTransient<JobFactory>(o => new JobFactory(builder.Services.BuildServiceProvider()));
     builder.Services.AddTransient<CheckerJob>();
 
     #endregion
@@ -123,7 +123,21 @@ try
             = JsonIgnoreCondition.WhenWritingNull;
     });
 
-
+    builder.Services.AddResponseCompression(opts =>
+    {
+        opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+            new[] { "application/octet-stream" });
+    });
+    
+    builder.Services.AddQuartz(q =>
+    {
+        q.UseMicrosoftDependencyInjectionJobFactory();
+    });
+    builder.Services.AddQuartzHostedService(opt =>
+    {
+        opt.WaitForJobsToComplete = true;
+    });
+    
     var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -152,6 +166,7 @@ try
     app.MapFallbackToFile("index.html");
 
     app.MapHub<LogHub>(LogHub.HubURI);
+    app.UseResponseCompression();
     
     var scope = app.Services.CreateScope().ServiceProvider;
     var db = scope.GetService<SMContext>();
@@ -160,7 +175,24 @@ try
     
     if (!string.IsNullOrWhiteSpace(botUrlStr))
     {
-        await scope.GetService<CheckerService>().Start();
+        var schedulerFactory = scope.GetRequiredService<ISchedulerFactory>();
+        var scheduler = await schedulerFactory.GetScheduler();
+
+        var job = JobBuilder.Create<CheckerJob>()
+            .WithIdentity("myJob", "group1")
+            .Build();
+
+        var trigger = TriggerBuilder.Create()
+            .WithIdentity("myTrigger", "group1")
+            .StartNow()
+            .WithSimpleSchedule(x => x
+                .WithIntervalInSeconds(15)
+                .RepeatForever())
+            .Build();
+
+        await scheduler.ScheduleJob(job, trigger);
+        
+        // await scope.GetService<CheckerService>().Start();
     }
 
     await app.RunAsync();

@@ -96,7 +96,16 @@
                     @context.CreatedAt.ToString("F")
                 </MudTd>
                 <MudTd>
-                    <MudChip Size="Size.Small">-</MudChip>
+                    <MudChip Size="Size.Small">
+                        @if (context.LogType >= LogType.Error && !context.FixStatus)
+                        {
+                            <MudButton OnClick=@(() => FixError(context))>Исправить ошибку</MudButton>
+                        }
+                        else
+                        {
+                            
+                        }
+                    </MudChip>
                 </MudTd>
             </RowTemplate>
             <PagerContent>
@@ -112,8 +121,27 @@
     public LogHubClient LogHubClient { get; set; }
 
     public DateTime? DateStart { get; set; } = DateTime.Now;
+
     public DateTime? DateEnd { get; set; } = DateTime.Now;
-    
+
+    public async Task FixError(LogViewModel log)
+    {
+        var result = await DialogService.ShowMessageBox("Подтверждение",
+            $"Вы точно хотите исправить лог {log.Name}?", "Да", "Нет");
+
+        if (!result.GetValueOrDefault(false))
+        {
+            return;
+        }
+
+        var res =await ModelController.FixError(log.ID);
+        if (res.Status)
+        {
+            Snackbar.Add("Лог успешно исправлен!", Severity.Success);
+        }
+        await LoadDates();
+    }
+
     public Color GetLogTypeColor(LogType logType)
     {
         switch (logType)
@@ -158,6 +186,7 @@
     {
         Snackbar.Add("New Add Event!");
         Models.Add(log);
+        StateHasChanged();
     }
 
     private async Task OnAddID(Guid id)

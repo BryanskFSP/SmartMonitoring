@@ -1,5 +1,4 @@
 using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -23,7 +22,7 @@ public class LogService
     private IBot BotApi;
     private PSQLService PsqlService;
 
-    private readonly IHubContext<LogHub> LogHub;
+    private IHubContext<LogHub> LogHub;
     public List<TelegramUserEntity> TelegramUsers { get; set; } = new();
 
     public LogService(SMContext context, IMapper mapper, IHubContext<LogHub> logHub,
@@ -35,7 +34,6 @@ public class LogService
         TelegramUserService = telegramUserService;
         BotApi = botApi;
         PsqlService = psqlService;
-
         TelegramUsers = TelegramUserService.GetAll();
     }
 
@@ -72,7 +70,6 @@ public class LogService
         try
         {
             await LogHub.Clients.All.SendAsync("Add", res);
-            await LogHub.Clients.All.SendAsync("AddID", res.ID.ToString());
             Log.Information("Send Data by SignalR");
         }
         catch (Exception e)
@@ -207,8 +204,9 @@ public class LogService
             res.Name = "Очистка началась!";
             res.Status = true;
         }
+
         entity = await Fix(id);
-        
+
         return res;
     }
 }
