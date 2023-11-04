@@ -17,8 +17,25 @@ public class TelegramUserEntity
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public long TelegramID { get; set; }
 
+    /// <summary>
+    /// ID администратора.
+    /// </summary>
+    public Guid? AdminID { get; set; }
+    
+    /// <summary>
+    /// Сущность Администратора.
+    /// </summary>
+    [ForeignKey(nameof(AdminID))]
+    public AdminEntity? Admin { get; set; }
+
+    /// <summary>
+    /// Статус уведомлений.
+    /// </summary>
     public bool NotificationStatus { get; set; } = true;
 
+    /// <summary>
+    /// Meta info.
+    /// </summary>
     public string? MetaInfo { get; set; }
 
     /// <summary>
@@ -31,9 +48,14 @@ public class TelegramUserEntity
     /// </summary>
     public DateTime LastUseAt { get; set; } = DateTime.Now;
     
-    
+    /// <summary>
+    /// ID организации.
+    /// </summary>
     public Guid OrganizationID { get; set; }
     
+    /// <summary>
+    /// Сущность организации.
+    /// </summary>
     [ForeignKey(nameof(OrganizationID))]
     public OrganizationEntity? Organization { get; set; }
 }

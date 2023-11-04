@@ -9,4 +9,5 @@ public class InviteViewModel
     public DateTime ExpireAt { get; set; } = DateTime.Now.AddDays(1);
     
     public Guid OrganizationID { get; set; }
+    public OrganizationViewModel? Organization { get; set; }
 }

@@ -25,7 +25,10 @@ public class InviteController : ControllerBase
         Mapper = mapper;
     }
 
-    // GET: api/Invite
+    /// <summary>
+    /// Get all Invites.
+    /// </summary>
+    /// <returns>List of Invite.</returns>
     [HttpGet]
     public async Task<ActionResult<List<InviteViewModel>>> GetAll()
     {
@@ -33,12 +36,20 @@ public class InviteController : ControllerBase
         return datas;
     }
 
+    /// <summary>
+    /// Get Hash by all Invites.
+    /// </summary>
+    /// <returns>Hash by all Invites.</returns>
     [HttpGet("hash")]
     public async Task<ActionResult<string>> GetAllHash()
     {
         return Service.GetAllHash();
     }
 
+    /// <summary>
+    /// Get all Full invites.
+    /// </summary>
+    /// <returns>List of Full invite.</returns>
     [HttpGet("full")]
     public async Task<ActionResult<List<InviteViewModel>>> GetFull()
     {
@@ -46,13 +57,21 @@ public class InviteController : ControllerBase
         return Ok(datas);
     }
     
+    /// <summary>
+    /// Get Hash by all Full Invites.
+    /// </summary>
+    /// <returns>Hash by all Full Invites.</returns>
     [HttpGet("full/hash")]
     public async Task<ActionResult<string>> GetFullHash()
     {
         return Service.GetAllFullHash();
     }
 
-    // GET: api/Invite?id=5
+    /// <summary>
+    /// Get Invite by ID.
+    /// </summary>
+    /// <param name="id">Invite ID.</param>
+    /// <returns>Invite model.</returns>
     [HttpGet("{id}")]
     public async Task<ActionResult<InviteViewModel>> GetByID(Guid id)
     {
@@ -65,13 +84,17 @@ public class InviteController : ControllerBase
         return Ok(Mapper.Map<InviteViewModel>(data));
     }
     
+    /// <summary>
+    /// Get Hash by Invite with ID.
+    /// </summary>
+    /// <param name="id">Invite ID.</param>
+    /// <returns>Hash of Invite.</returns>
     [HttpGet("{id}/hash")]
     public async Task<ActionResult<string>> GetByIDHash(Guid id)
     {
         return await Service.GetByIDHash(id);
     }
     
-    // GET: api/Invite?id=5
     [HttpGet("{id}/full")]
     public async Task<ActionResult<InviteViewModel>> GetByIDFull(Guid id)
     {
