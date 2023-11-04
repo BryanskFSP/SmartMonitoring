@@ -1,6 +1,6 @@
 # SmartMonitoring
 
-Onboarding bot.
+Smart Monitoring Core.
 <div align="center">
  <p>
  <a href="https://sm.kaboom.pro">

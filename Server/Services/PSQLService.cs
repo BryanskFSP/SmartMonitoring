@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using FormatWith;
 using Npgsql;
+using Serilog;
 using SmartMonitoring.Server.Entities;
 using SmartMonitoring.Shared.Models;
 
@@ -32,13 +33,13 @@ public class PSQLService
             return null;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
-
-        var sql = $@"SELECT * FROM sys_caching_ratio()";
-
         try
         {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
+
+            var sql = $@"SELECT * FROM sys_caching_ratio()";
+
             using var cmd = new NpgsqlCommand(sql, connection);
 
             using var dataReader = cmd.ExecuteReader();
@@ -54,8 +55,9 @@ public class PSQLService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Log.Error(e, "Error in GetCachingRatio");
             res.Status = false;
+            res.Name = e.Message;
             return res;
         }
 
@@ -76,13 +78,13 @@ public class PSQLService
             return null;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
-
-        var sql = $@"SELECT * FROM sys_caching_indexes_ratio()";
-
         try
         {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
+
+            var sql = $@"SELECT * FROM sys_caching_indexes_ratio()";
+
             using var cmd = new NpgsqlCommand(sql, connection);
 
             using var dataReader = cmd.ExecuteReader();
@@ -98,8 +100,9 @@ public class PSQLService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Log.Error(e, "Error in GetCachingIndexesRatio");
             res.Status = false;
+            res.Name = e.Message;
             return res;
         }
 
@@ -121,13 +124,13 @@ public class PSQLService
             return null;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
-
-        var sql = $@"SELECT * FROM {(type == MemoryType.HDD ? "sys_df()" : "sys_free()")}";
-
         try
         {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
+
+            var sql = $@"SELECT * FROM {(type == MemoryType.HDD ? "sys_df()" : "sys_free()")}";
+
             using var cmd = new NpgsqlCommand(sql, connection);
 
             using var dataReader = cmd.ExecuteReader();
@@ -158,8 +161,9 @@ public class PSQLService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Log.Error(e, "Error in GetMemoryInfo");
             res.Status = false;
+            res.Name = e.Message;
             return res;
         }
 
@@ -212,75 +216,114 @@ public class PSQLService
     /// Clear space in DB.
     /// </summary>
     /// <param name="dbID">DB ID</param>
-    public async Task ClearSpace(Guid dbID)
+    public async Task<ServiceResponse<string>> ClearSpace(Guid dbID)
     {
         var res = new ServiceResponse<string>();
         var dataBase = await DBService.GetByID(dbID);
         if (dataBase == null)
         {
-            return;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
 
-        var sql = $"SELECT sys_clear()";
+            var sql = $"SELECT sys_clear()";
 
-        using var cmd = new NpgsqlCommand(sql, connection);
+            using var cmd = new NpgsqlCommand(sql, connection);
 
-        var result = cmd.ExecuteScalar().ToString();
+            var result = cmd.ExecuteScalar().ToString();
 
-        await connection.CloseAsync();
+            await connection.CloseAsync();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
+        }
+
+        return res;
     }
-    
+
     /// <summary>
     /// Clear space by vacuum in DB.
     /// </summary>
     /// <param name="dbID">DB ID</param>
-    public async Task ClearSpaceByVacuum(Guid dbID)
+    public async Task<ServiceResponse<string>> ClearSpaceByVacuum(Guid dbID)
     {
         var res = new ServiceResponse<string>();
         var dataBase = await DBService.GetByID(dbID);
         if (dataBase == null)
         {
-            return;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
 
-        var sql = $"VACUUM FULL;";
+            var sql = $"VACUUM FULL;";
 
-        using var cmd = new NpgsqlCommand(sql, connection);
+            using var cmd = new NpgsqlCommand(sql, connection);
 
-        var result = cmd.ExecuteScalar().ToString();
+            var result = cmd.ExecuteScalar().ToString();
 
-        await connection.CloseAsync();
+            await connection.CloseAsync();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
+        }
+
+        return res;
     }
 
     /// <summary>
     /// Create infitity loop
     /// </summary>
     /// <param name="dbID">DB ID</param>
-    public async Task CreateInfinityLoop(Guid dbID)
+    public async Task<ServiceResponse<string>> CreateInfinityLoop(Guid dbID)
     {
-        var res = new ServiceResponse<MemoryInfoModel>();
+        var res = new ServiceResponse<string>();
         var dataBase = await DBService.GetByID(dbID);
         if (dataBase == null)
         {
-            return;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
 
-        var sql = $"SELECT startinfinitytimework();";
+            var sql = $"SELECT startinfinitytimework();";
 
-        using var cmd = new NpgsqlCommand(sql, connection);
+            using var cmd = new NpgsqlCommand(sql, connection);
 
-        await Task.Run(async () => await (await cmd.ExecuteReaderAsync()).CloseAsync());
+            await Task.Run(async () => await (await cmd.ExecuteReaderAsync()).CloseAsync());
 
-        await connection.CloseAsync();
+            await connection.CloseAsync();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
+        }
+
+        return res;
     }
 
     /// <summary>
@@ -288,56 +331,69 @@ public class PSQLService
     /// </summary>
     /// <param name="dbID">DB ID.</param>
     /// <returns>List of Processes.</returns>
-    public async Task<List<PGStatActivityModel>> GetModelsActive(Guid dbID)
+    public async Task<ServiceResponse<List<PGStatActivityModel>>> GetModelsActive(Guid dbID)
     {
-        var res = new ServiceResponse<MemoryInfoModel>();
+        var res = new ServiceResponse<List<PGStatActivityModel>>();
         var dataBase = await DBService.GetByID(dbID);
         if (dataBase == null)
         {
-            return null;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
-
-        var ress = new List<PGStatActivityModel>();
-
-        string sql =
-            "SELECT pid, datname, usename, state, backend_start\nFROM pg_stat_activity\nWHERE state = 'active'";
-        var cmd = new NpgsqlCommand(sql, connection);
-
-        using NpgsqlDataReader rdr = cmd.ExecuteReader();
-
-        while (rdr.Read())
+        try
         {
-            var model = new PGStatActivityModel()
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
+
+            var ress = new List<PGStatActivityModel>();
+
+            string sql =
+                "SELECT pid, datname, usename, state, backend_start\nFROM pg_stat_activity\nWHERE state = 'active'";
+            var cmd = new NpgsqlCommand(sql, connection);
+
+            using NpgsqlDataReader rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
             {
-                PID = rdr.GetInt64(0),
-                DatName = rdr.GetString(1),
-                Usename = rdr.GetString(2),
-                state = rdr.GetString(3),
-                BackendStart = rdr.GetDateTime(4),
-            };
-            ress.Add(model);
+                var model = new PGStatActivityModel()
+                {
+                    PID = rdr.GetInt64(0),
+                    DatName = rdr.GetString(1),
+                    Usename = rdr.GetString(2),
+                    state = rdr.GetString(3),
+                    BackendStart = rdr.GetDateTime(4),
+                };
+                ress.Add(model);
+            }
+
+            await rdr.CloseAsync();
+
+
+            sql = "SELECT pg_backend_pid()";
+            cmd = new NpgsqlCommand(sql, connection);
+            var dr = cmd.ExecuteReader();
+            var id = 0;
+            while (dr.Read())
+            {
+                id = dr.GetInt32(0);
+            }
+
+            ress.RemoveAll(x => x.PID == id);
+            await dr.CloseAsync();
+
+            await connection.CloseAsync();
+            res.Data = ress;
         }
-
-        await rdr.CloseAsync();
-
-
-        sql = "SELECT pg_backend_pid()";
-        cmd = new NpgsqlCommand(sql, connection);
-        var dr = cmd.ExecuteReader();
-        var id = 0;
-        while (dr.Read())
+        catch (Exception e)
         {
-            id = dr.GetInt32(0);
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
         }
 
-        ress.RemoveAll(x => x.PID == id);
-        await dr.CloseAsync();
-
-        await connection.CloseAsync();
-        return ress;
+        return res;
     }
 
     /// <summary>
@@ -351,42 +407,53 @@ public class PSQLService
         var dataBase = await DBService.GetByID(dbID);
         if (dataBase == null)
         {
-            return null;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
 
-        var ress = new List<TableStatsModel>();
+            var ress = new List<TableStatsModel>();
 
-        string sql =
-            @"SELECT
+            string sql =
+                @"SELECT
    relname, 
    n_tup_upd+n_tup_ins+n_tup_del AS operationsAmount
 FROM pg_stat_user_tables
 ORDER BY operationsAmount DESC;
 ";
-        var cmd = new NpgsqlCommand(sql, connection);
+            var cmd = new NpgsqlCommand(sql, connection);
 
-        using NpgsqlDataReader rdr = cmd.ExecuteReader();
+            using NpgsqlDataReader rdr = cmd.ExecuteReader();
 
-        while (rdr.Read())
-        {
-            var model = new TableStatsModel()
+            while (rdr.Read())
             {
-                Name = rdr.GetString(0),
-                OperationsCount = rdr.GetInt64(1)
-            };
-            ress.Add(model);
+                var model = new TableStatsModel()
+                {
+                    Name = rdr.GetString(0),
+                    OperationsCount = rdr.GetInt64(1)
+                };
+                ress.Add(model);
+            }
+
+            await rdr.CloseAsync();
+
+            await connection.CloseAsync();
+
+            res.Data = ress;
+            res.Status = true;
+            return res;
         }
-
-        await rdr.CloseAsync();
-
-        await connection.CloseAsync();
-
-        res.Data = ress;
-        res.Status = true;
-        return res;
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
+        }
     }
 
     public async Task<ServiceResponse<string>> CreateFunctions(Guid dbID)
@@ -395,14 +462,17 @@ ORDER BY operationsAmount DESC;
         var dataBase = await DBService.GetByID(dbID);
         if (dataBase == null)
         {
-            return null;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
 
-        var sql = new StringBuilder();
-        sql.AppendLine(@"CREATE OR REPLACE FUNCTION sys_caching_ratio() RETURNS SETOF numeric
+            var sql = new StringBuilder();
+            sql.AppendLine(@"CREATE OR REPLACE FUNCTION sys_caching_ratio() RETURNS SETOF numeric
 LANGUAGE plpgsql as
 $$
 BEGIN
@@ -410,7 +480,7 @@ BEGIN
 END;
 $$;");
 
-        sql.AppendLine(@"CREATE OR REPLACE FUNCTION sys_caching_indexes_ratio() RETURNS SETOF numeric
+            sql.AppendLine(@"CREATE OR REPLACE FUNCTION sys_caching_indexes_ratio() RETURNS SETOF numeric
 LANGUAGE plpgsql as
 $$
 BEGIN
@@ -418,7 +488,7 @@ BEGIN
 END;
 $$;
 ");
-        sql.AppendLine(@"CREATE OR REPLACE FUNCTION sys_clear() RETURNS SETOF text
+            sql.AppendLine(@"CREATE OR REPLACE FUNCTION sys_clear() RETURNS SETOF text
 LANGUAGE plpgsql as
 $$
 BEGIN
@@ -427,16 +497,24 @@ BEGIN
     RETURN QUERY SELECT CAST(regexp_split_to_array(content, '\s+') as text) FROM tmp_sys_clear LIMIT 1;
 END;
 $$;");
-        sql.AppendLine(@"");
-        sql.AppendLine(@"");
+            sql.AppendLine(@"");
+            sql.AppendLine(@"");
 
-        using var cmd = new NpgsqlCommand(sql.ToString(), connection);
+            using var cmd = new NpgsqlCommand(sql.ToString(), connection);
 
-        cmd.ExecuteNonQuery();
+            cmd.ExecuteNonQuery();
 
-        await connection.CloseAsync();
+            await connection.CloseAsync();
 
-        return res;
+            return res;
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
+        }
     }
 
     /// <summary>
@@ -450,16 +528,19 @@ $$;");
         var dataBase = await DBService.GetByID(dbID);
         if (dataBase == null)
         {
-            return null;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
 
-        var ress = new List<PSQLLockModel>();
+            var ress = new List<PSQLLockModel>();
 
-        string sql =
-            @"SELECT COALESCE(blockingl.relation::regclass::text, blockingl.locktype) AS locked_item,
+            string sql =
+                @"SELECT COALESCE(blockingl.relation::regclass::text, blockingl.locktype) AS locked_item,
        now() - blockeda.query_start                                     AS waiting_duration,
        blockeda.pid                                                     AS blocked_pid,
        blockeda.query                                                   AS blocked_query,
@@ -472,28 +553,36 @@ JOIN pg_locks blockingl ON (blockingl.transactionid = blockedl.transactionid OR
 JOIN pg_stat_activity blockinga ON blockingl.pid = blockinga.pid AND blockinga.datid = blockeda.datid
 WHERE NOT blockedl.granted AND blockinga.datname = current_database();
 ";
-        var cmd = new NpgsqlCommand(sql, connection);
+            var cmd = new NpgsqlCommand(sql, connection);
 
-        using NpgsqlDataReader rdr = cmd.ExecuteReader();
+            using NpgsqlDataReader rdr = cmd.ExecuteReader();
 
-        while (rdr.Read())
-        {
-            var model = new PSQLLockModel()
+            while (rdr.Read())
             {
-                LockedItem = rdr.GetString(0),
-                WarningDuration = rdr.GetInt64(1),
-                BlockedPID = rdr.GetInt32(2),
-                BlockedQuery = rdr.GetString(3),
-                BlockedMode = rdr.GetString(4),
-            };
-            ress.Add(model);
+                var model = new PSQLLockModel()
+                {
+                    LockedItem = rdr.GetString(0),
+                    WarningDuration = rdr.GetInt64(1),
+                    BlockedPID = rdr.GetInt32(2),
+                    BlockedQuery = rdr.GetString(3),
+                    BlockedMode = rdr.GetString(4),
+                };
+                ress.Add(model);
+            }
+
+            await rdr.CloseAsync();
+
+            await connection.CloseAsync();
+            res.Data = ress;
+            return res;
         }
-
-        await rdr.CloseAsync();
-
-        await connection.CloseAsync();
-        res.Data = ress;
-        return res;
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
+        }
     }
 
     /// <summary>
@@ -507,16 +596,19 @@ WHERE NOT blockedl.granted AND blockinga.datname = current_database();
         var dataBase = await DBService.GetByID(dbID);
         if (dataBase == null)
         {
-            return null;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
 
-        var ress = new List<IndexModel>();
+            var ress = new List<IndexModel>();
 
-        string sql =
-            @"SELECT 
+            string sql =
+                @"SELECT 
    relname, 
    seq_scan, 
    idx_scan, 
@@ -525,29 +617,37 @@ FROM pg_stat_user_tables
 WHERE seq_scan <> 0
 ORDER BY IndexStat DESC;
 ";
-        var cmd = new NpgsqlCommand(sql, connection);
+            var cmd = new NpgsqlCommand(sql, connection);
 
-        using NpgsqlDataReader rdr = cmd.ExecuteReader();
+            using NpgsqlDataReader rdr = cmd.ExecuteReader();
 
-        while (rdr.Read())
-        {
-            var model = new IndexModel()
+            while (rdr.Read())
             {
-                RelName = rdr.GetString(0),
-                SeqScan = rdr.GetInt64(1),
-                IdxScan = rdr.GetInt64(2),
-                IndexStat = rdr.GetInt64(3)
-            };
-            ress.Add(model);
+                var model = new IndexModel()
+                {
+                    RelName = rdr.GetString(0),
+                    SeqScan = rdr.GetInt64(1),
+                    IdxScan = rdr.GetInt64(2),
+                    IndexStat = rdr.GetInt64(3)
+                };
+                ress.Add(model);
+            }
+
+            await rdr.CloseAsync();
+
+            await connection.CloseAsync();
+            res.Data = ress;
+            return res;
         }
-
-        await rdr.CloseAsync();
-
-        await connection.CloseAsync();
-        res.Data = ress;
-        return res;
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
+        }
     }
-    
+
     /// <summary>
     /// Get outdated index stats in DB.
     /// </summary>
@@ -559,16 +659,19 @@ ORDER BY IndexStat DESC;
         var dataBase = await DBService.GetByID(dbID);
         if (dataBase == null)
         {
-            return null;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
 
-        var ress = new List<OutdatedIndexModel>();
+            var ress = new List<OutdatedIndexModel>();
 
-        string sql =
-            @"SELECT 
+            string sql =
+                @"SELECT 
    indexrelname, 
    relname, 
    idx_tup_read/idx_tup_fetch as stats
@@ -576,26 +679,34 @@ FROM pg_stat_user_indexes
 WHERE idx_tup_fetch <> 0
 ORDER BY stats DESC;
 ";
-        var cmd = new NpgsqlCommand(sql, connection);
+            var cmd = new NpgsqlCommand(sql, connection);
 
-        using NpgsqlDataReader rdr = cmd.ExecuteReader();
+            using NpgsqlDataReader rdr = cmd.ExecuteReader();
 
-        while (rdr.Read())
-        {
-            var model = new OutdatedIndexModel()
+            while (rdr.Read())
             {
-                Indexrelname = rdr.GetString(0),
-                Relname = rdr.GetString(1),
-                Stats = rdr.GetInt64(2),
-            };
-            ress.Add(model);
+                var model = new OutdatedIndexModel()
+                {
+                    Indexrelname = rdr.GetString(0),
+                    Relname = rdr.GetString(1),
+                    Stats = rdr.GetInt64(2),
+                };
+                ress.Add(model);
+            }
+
+            await rdr.CloseAsync();
+
+            await connection.CloseAsync();
+            res.Data = ress;
+            return res;
         }
-
-        await rdr.CloseAsync();
-
-        await connection.CloseAsync();
-        res.Data = ress;
-        return res;
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
+        }
     }
 
     /// <summary>
@@ -609,13 +720,16 @@ ORDER BY stats DESC;
         var dataBase = await DBService.GetByID(dataBaseID);
         if (dataBase == null)
         {
-            return null;
+            res.Name = "DB not found";
+            return res;
         }
 
-        using var connection = GetConnection(dataBase);
-        await connection.OpenAsync();
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
 
-        var sql = $@"SELECT
+            var sql = $@"SELECT
   CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::BIGINT END AS wastedbytes
 FROM (
   SELECT
@@ -656,9 +770,6 @@ FROM (
 ) AS sml
 ORDER BY wastedbytes DESC limit 1;
 ";
-
-        try
-        {
             using var cmd = new NpgsqlCommand(sql, connection);
 
             using var dataReader = cmd.ExecuteReader();

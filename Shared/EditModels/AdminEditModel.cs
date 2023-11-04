@@ -13,4 +13,6 @@ public class AdminEditModel
     [Display(Name = "Повторите пароль")]
     [Compare(nameof(Password))] 
     public string? RepeatPassword { get; set; } = null!;
+
+    public Guid OrganizationID { get; set; }
 }

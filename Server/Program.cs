@@ -29,8 +29,12 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    builder.Services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
+    builder.Host.UseSerilog();
+    
     StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
-// Initialize DB Context.
+    
+    // Initialize DB Context.
 
     var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
                            "Host=90.156.208.88;Database=bruanskbd1;Username=bruansk;Password=bruansk";
@@ -39,6 +43,13 @@ try
     builder.Services.AddDbContext<SMContext>(options =>
         options.UseNpgsql(connectionString));
 
+    // Initialize Redis.
+    
+    builder.Services.AddStackExchangeRedisCache(options => {
+        options.Configuration = "localhost";
+        options.InstanceName = "local";
+    });
+    
     // Add services to the container.
 
     builder.Services.AddControllersWithViews();

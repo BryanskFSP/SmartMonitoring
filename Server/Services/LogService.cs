@@ -200,17 +200,15 @@ public class LogService
             await PsqlService.KillProcess(entity.DataBaseID.Value, entity.EntityID);
             res.Name = "Процесс успешно убит";
             res.Status = true;
-
-            entity = await Fix(id);
         }
         else if (entity.Action == ActionType.NoSpace)
         {
             await PsqlService.ClearSpace(entity.DataBaseID.Value);
             res.Name = "Очистка началась!";
             res.Status = true;
-            entity = await Fix(id);
         }
-
+        entity = await Fix(id);
+        
         return res;
     }
 }

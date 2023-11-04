@@ -246,7 +246,7 @@ public class DataBaseController : ControllerBase
 
         var logs = await LogService.GetAllByDataBaseID(id);
         
-        foreach (var log in logs)
+        foreach (var log in logs.Where(x=>x.FixStatus == false && x.LogType >= LogType.Error))
         {
             var result = await LogService.FixError(log.ID);
             sb.AppendLine(result.Data);
