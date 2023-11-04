@@ -41,7 +41,7 @@ public class CheckerJob : IJob
         new()
         {
             Type = ReferenceType.ProcessTimeInSeconds,
-            Value = 60
+            Value = 20
         }
     };
 

@@ -1,6 +1,7 @@
 @page "/admin/logs"
 @using Refit
 @using System.ComponentModel.DataAnnotations
+@using SmartMonitoring.Client.HubClients
 @using SmartMonitoring.Shared.Extensions
 @using SmartMonitoring.Shared.Interfaces.Refit
 @using SmartMonitoring.Shared.Models
@@ -105,6 +106,9 @@
 
 @code {
 
+    [Inject]
+    public LogHubClient LogHubClient { get; set; }
+
     public DateTime? DateStart { get; set; } = DateTime.Now;
     public DateTime? DateEnd { get; set; } = DateTime.Now;
     
@@ -143,6 +147,14 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadDates();
+        
+        LogHubClient.OnAddEvent += OnAdd;
+    }
+
+    private async Task OnAdd(LogViewModel log)
+    {
+        Snackbar.Add("New Add Event!");
+        Models.Add(log);
     }
 
     private async Task LoadDates()

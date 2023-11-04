@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using SmartMonitoring.Client;
 using MudBlazor.Services;
 using SmartMonitoring.Client.Providers;
+using SmartMonitoring.Shared.ViewModels;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
