@@ -49,6 +49,11 @@ public class LogController : ControllerBase
         return logs;
     }
 
+    /// <summary>
+    /// Fix error in Log.
+    /// </summary>
+    /// <param name="id">Log ID.</param>
+    /// <returns>Service response of try fix error.</returns>
     [HttpPost("{id}")]
     public async Task<ActionResult<ServiceResponse<string>>> FixError(Guid id)
     {
@@ -67,6 +72,13 @@ public class LogController : ControllerBase
             res.Name = "Процесс успешно убит";
             res.Status = true;
             
+            entity = await Service.Fix(id);
+        }
+        else if (entity.Action == ActionType.NoSpace)
+        {
+            await PsqlService.ClearSpace(entity.DataBaseID.Value);
+            res.Name = "Очистка началась!";
+            res.Status = true;
             entity = await Service.Fix(id);
         }
 

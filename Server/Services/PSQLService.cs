@@ -209,6 +209,31 @@ public class PSQLService
     }
     
     /// <summary>
+    /// Clear space in DB.
+    /// </summary>
+    /// <param name="dbID">DB ID</param>
+    public async Task ClearSpace(Guid dbID)
+    {
+        var res = new ServiceResponse<string>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            return;
+        }
+
+        using var connection = GetConnection(dataBase);
+        await connection.OpenAsync();
+
+        var sql = $"SELECT sys_clear()";
+
+        using var cmd = new NpgsqlCommand(sql, connection);
+
+        var result = cmd.ExecuteScalar().ToString();
+
+        await connection.CloseAsync();
+    }
+    
+    /// <summary>
     /// Create infitity loop
     /// </summary>
     /// <param name="dbID">DB ID</param>
@@ -368,7 +393,15 @@ BEGIN
 END;
 $$;
 ");
-        sql.AppendLine(@"");
+        sql.AppendLine(@"CREATE OR REPLACE FUNCTION sys_clear() RETURNS SETOF text
+LANGUAGE plpgsql as
+$$
+BEGIN
+    CREATE TEMP TABLE IF NOT EXISTS tmp_sys_clear (content text) ON COMMIT DROP;
+    COPY tmp_sys_clear FROM PROGRAM 'python3 /cleartrash.py';
+    RETURN QUERY SELECT CAST(regexp_split_to_array(content, '\s+') as text) FROM tmp_sys_clear LIMIT 1;
+END;
+$$;");
         sql.AppendLine(@"");
         sql.AppendLine(@"");
 

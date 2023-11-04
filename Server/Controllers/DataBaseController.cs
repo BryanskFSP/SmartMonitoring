@@ -17,6 +17,7 @@ namespace SmartMonitoring.Server.Controllers;
 public class DataBaseController : ControllerBase
 {
     private DataBaseService Service;
+    private PSQLService PsqlService;
     private IMapper Mapper;
 
     public DataBaseController(DataBaseService service, IMapper mapper)
@@ -25,7 +26,10 @@ public class DataBaseController : ControllerBase
         Mapper = mapper;
     }
 
-    // GET: api/DataBase
+    /// <summary>
+    /// Get all DataBases.
+    /// </summary>
+    /// <returns>List of Database.</returns>
     [HttpGet]
     public async Task<ActionResult<List<DataBaseViewModel>>> GetAll()
     {
@@ -33,6 +37,10 @@ public class DataBaseController : ControllerBase
         return datas;
     }
 
+    /// <summary>
+    /// Get all Full DataBases.
+    /// </summary>
+    /// <returns></returns>
     [HttpGet("full")]
     public async Task<ActionResult<List<DataBaseViewModel>>> GetFull()
     {
@@ -40,7 +48,11 @@ public class DataBaseController : ControllerBase
         return Ok(datas);
     }
 
-    // GET: api/DataBase?id=5
+    /// <summary>
+    /// Get DataBase by ID.
+    /// </summary>
+    /// <param name="id">DataBase ID.</param>
+    /// <returns>DataBase model.</returns>
     [HttpGet("{id}")]
     public async Task<ActionResult<DataBaseViewModel>> GetByID(Guid id)
     {
@@ -53,11 +65,16 @@ public class DataBaseController : ControllerBase
         return Ok(Mapper.Map<DataBaseViewModel>(data));
     }
 
-    // POST: api/DataBase
+    /// <summary>
+    /// Create DataBase.
+    /// </summary>
+    /// <param name="editModel">Edit model of DataBase.</param>
+    /// <returns>DataBase model.</returns>
     [HttpPost]
     public async Task<ActionResult<DataBaseViewModel>> Create([FromBody] DataBaseEditModel editModel)
     {
         var data = await Service.Create(editModel);
+        await PsqlService.CreateFunctions(data.ID);
         if (data == null)
         {
             return NotFound();
@@ -66,7 +83,12 @@ public class DataBaseController : ControllerBase
         return Ok(Mapper.Map<DataBaseViewModel>(data));
     }
 
-    // PUT: api/DataBase/5
+    /// <summary>
+    /// Update DataBase by ID.
+    /// </summary>
+    /// <param name="id">DataBase ID.</param>
+    /// <param name="editModel">Edit model of DataBase.</param>
+    /// <returns>DataBase model.</returns>
     [HttpPut("{id}")]
     public async Task<ActionResult<DataBaseViewModel>> Edit(Guid id, [FromBody] DataBaseEditModel editModel)
     {
@@ -79,7 +101,11 @@ public class DataBaseController : ControllerBase
         return Ok(Mapper.Map<DataBaseViewModel>(data));
     }
 
-    // DELETE: api/DataBase/5
+    /// <summary>
+    /// Delete DataBase by ID.
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(Guid id)
     {

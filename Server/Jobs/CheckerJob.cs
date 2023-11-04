@@ -113,7 +113,7 @@ public class CheckerJob : IJob
                     Action = ActionType.NoSpace,
                     OrganizationID = entity.OrganizationID,
                     DataBaseID = entity.ID,
-                    Description = $"На сервере свободно менее {procent} процентов памяти!",
+                    Description = $"На сервере свободно менее {procent.ToString()} процентов памяти!",
                 };
                 await LogService.Add(log);
             }
@@ -133,13 +133,13 @@ public class CheckerJob : IJob
                     Action = ActionType.CachingRatio,
                     OrganizationID = entity.OrganizationID,
                     DataBaseID = entity.ID,
-                    Description = $"На сервере плохо с кэшированием: {cachingRatio} процентов!",
+                    Description = $"На сервере плохо с кэшированием: {cachingRatio.Data} процентов!",
                 };
                 await LogService.Add(log);
             }
 
 
-            if (cachingIndexesRatio.Data >= cachingRatioIndexesValue)
+            if (cachingIndexesRatio.Data <= cachingRatioIndexesValue)
             {
                 var log = new LogEditModel
                 {
@@ -147,7 +147,7 @@ public class CheckerJob : IJob
                     Action = ActionType.CachingIndexRatio,
                     OrganizationID = entity.OrganizationID,
                     DataBaseID = entity.ID,
-                    Description = $"На сервере плохо с кэшированием индексов: {cachingRatio} процентов!",
+                    Description = $"На сервере плохо с кэшированием индексов: {cachingRatio.Data} процентов!",
                 };
                 await LogService.Add(log);
             }

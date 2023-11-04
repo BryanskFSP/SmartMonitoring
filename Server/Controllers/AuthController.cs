@@ -16,6 +16,11 @@ public class AuthController : ControllerBase
         AuthService = authService;
     }
 
+    /// <summary>
+    /// Auth User (admin) by auth data.
+    /// </summary>
+    /// <param name="model">Auth data.</param>
+    /// <returns>Auth helper model.</returns>
     [HttpPost("user")]
     public async Task<ActionResult<ServiceResponse<AuthHelperModel<AdminViewModel>>>> AuthUser(AuthModel model)
     {

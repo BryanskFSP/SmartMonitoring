@@ -19,7 +19,10 @@ public class AdminController : ControllerBase
         Mapper = mapper;
     }
 
-    // GET: api/Admin
+    /// <summary>
+    /// Get all Admins.
+    /// </summary>
+    /// <returns>List of Admin models.</returns>
     [HttpGet]
     public async Task<ActionResult<List<AdminViewModel>>> GetAll()
     {
@@ -27,6 +30,10 @@ public class AdminController : ControllerBase
         return datas;
     }
 
+    /// <summary>
+    /// Get all Full Admins.
+    /// </summary>
+    /// <returns>List of Full Admin models.</returns>
     [HttpGet("full")]
     public async Task<ActionResult<List<AdminViewModel>>> GetFull()
     {
@@ -34,7 +41,11 @@ public class AdminController : ControllerBase
         return Ok(datas);
     }
 
-    // GET: api/Admin?id=5
+    /// <summary>
+    /// Get Admin by ID.
+    /// </summary>
+    /// <param name="id">Admin ID.</param>
+    /// <returns>Admin model.</returns>
     [HttpGet("{id}")]
     public async Task<ActionResult<AdminViewModel>> GetByID(Guid id)
     {
@@ -47,7 +58,11 @@ public class AdminController : ControllerBase
         return Ok(Mapper.Map<AdminViewModel>(data));
     }
 
-    // POST: api/Admin
+    /// <summary>
+    /// Create Admin.
+    /// </summary>
+    /// <param name="editModel">Edit model of Admin.</param>
+    /// <returns>Admin model.</returns>
     [HttpPost]
     public async Task<ActionResult<AdminViewModel>> Create([FromBody] AdminEditModel editModel)
     {

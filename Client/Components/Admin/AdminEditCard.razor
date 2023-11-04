@@ -11,6 +11,7 @@
             <MudCard>
                 <MudCardContent>
                     <MudTextField Label="Имя" @bind-Value="Model.Name" For="() => Model.Name"/>
+                    <MudTextField Label="Логин" @bind-Value="Model.Name" For="() => Model.Login"/>
                     <MudTextField Label="Пароль"
                                   @bind-Value="Model.Password"
                                   Required="!IsEdit"
