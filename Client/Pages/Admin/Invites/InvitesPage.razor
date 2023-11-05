@@ -8,7 +8,7 @@
 
 <MudGrid>
     <MudItem>
-        <MudText Typo="Typo.h3" GutterBottom="true">Админы</MudText>
+        <MudText Typo="Typo.h3" GutterBottom="true">Приглашения</MudText>
     </MudItem>
     <MudItem>
         <MudFab StartIcon="@Icons.Material.Filled.Add"
@@ -31,7 +31,7 @@
     {
         <MudTable Items="Models" Hover="true" Filter="new Func<InviteViewModel, bool>(FilterFuncInput)" SortLabel="Sort By" Elevation="0">
             <ToolBarContent>
-                <MudText Typo="Typo.h6">Админы</MudText>
+                <MudText Typo="Typo.h6">Приглашения</MudText>
                 <MudSpacer/>
                 <MudTextField @bind-Value="SearchString" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
             </ToolBarContent>
@@ -40,12 +40,20 @@
                     <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<InviteViewModel, object>(x => x.Code)">Код</MudTableSortLabel>
                 </MudTh>
                 <MudTh>
+                    <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<InviteViewModel, object>(x => x.UseCount)">Кол-во разрешённых использований</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<InviteViewModel, object>(x => x.UsedCount)">Кол-во использований</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
                     <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<InviteViewModel, object>(x => x.CreatedAt)">Дата время создания</MudTableSortLabel>
                 </MudTh>
                 <MudTh>Действие</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Код">@context.Code</MudTd>
+                <MudTd>@context.UseCount</MudTd>
+                <MudTd>@context.UsedCount</MudTd>
                 <MudTd>@context.CreatedAt</MudTd>
                 <MudTd DataLabel="Действие">
                     <MudGrid>

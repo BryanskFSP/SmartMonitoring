@@ -1,1 +1,26 @@
-﻿
+﻿@using SmartMonitoring.Client.Components.Invite
+
+@page "/admin/invites/{ID:guid}/edit"
+@page "/admin/invites/create"
+
+@layout AdminLayout
+
+<PageTitle>@PageTitle</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudGrid>
+            <MudItem>
+                <MudFab DisableElevation="true"
+                        StartIcon="@Icons.Material.Filled.ArrowBack"
+                        Text="Назад" Href="/admin/invites"/>
+            </MudItem>
+            <MudItem>
+                <MudText Typo="Typo.h3">@PageTitle</MudText>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem>
+        <InviteEditCard ID=@ID UseNavigations="true" NavigationUrl="/admin/invites/{ID}/edit"/>
+    </MudItem>
+</MudGrid>

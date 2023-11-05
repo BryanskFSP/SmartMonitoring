@@ -1,4 +1,5 @@
-﻿namespace SmartMonitoring.Shared.EditModels;
+﻿
+namespace SmartMonitoring.Shared.EditModels;
 
 public class InviteEditModel
 {
@@ -15,7 +16,7 @@ public class InviteEditModel
     /// <summary>
     /// Код.
     /// </summary>
-    public string Code { get; set; }
+    public string? Code { get; set; }
 
     /// <summary>
     /// Дата время создания.

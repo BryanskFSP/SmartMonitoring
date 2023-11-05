@@ -1,0 +1,163 @@
+@using AutoMapper
+@using FormatWith
+@using Refit
+@using SmartMonitoring.Shared.EditModels
+@using SmartMonitoring.Shared.Interfaces.Refit
+@using SmartMonitoring.Shared.ViewModels
+
+<EditForm Model="@Model" OnValidSubmit="OnValidSumbit">
+    <DataAnnotationsValidator/>
+    <MudGrid>
+        <MudItem>
+            <MudCard>
+                <MudCardContent>
+                    <MudNumericField T="int" Label="Кол-во разрешённых использований" @bind-Value="Model.UseCount" />
+                    <MudNumericField T="int" Label="Кол-во использований" ReadOnly="true" @bind-Value="Model.UsedCount" />
+                    <MudTextField Label="Код" @bind-Value="Model.Code" For="() => Model.Code" ReadOnly="true"/>
+                     <MudAutocomplete T="OrganizationViewModel" @bind-Value="SelectedOrganization"
+                                                         Label="Организация"
+                                                         SearchFunc="@SearchOrganization"
+                                                         ToStringFunc="@(x => x != null ? x.Name : null)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudFab ButtonType="ButtonType.Submit"
+                            Variant="Variant.Filled"
+                            DisableElevation="true"
+                            StartIcon="@Icons.Material.Filled.Save"
+                            Text="Сохранить"
+                            Color="Color.Primary"/>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+
+@code {
+
+    [Inject]
+    private IMapper Mapper { get; set; }
+
+    [Inject]
+    private IInviteController ModelController { get; set; }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; }
+
+    [Inject]
+    private IOrganizationController OrganizationController { get; set; }
+
+
+    private List<OrganizationViewModel> Organizations = new();
+    private OrganizationViewModel SelectedOrganization;
+    
+    [Parameter]
+    public Guid? ID { get; set; }
+
+    public bool IsEdit => ID != null;
+    public string PageTitle => IsEdit ? "Изменение админа" : "Создание админа";
+
+    private InviteEditModel Model = new();
+
+    [Parameter]
+    public bool UseNavigations { get; set; } = false;
+
+    private string _navigationUrl = "/admin/admins/{ID}/edit";
+
+    [Parameter]
+    public string? NavigationUrl
+    {
+        get => _navigationUrl.FormatWith(new { ID });
+        set => _navigationUrl = value ?? string.Empty;
+    }
+    
+    private async Task<IEnumerable<OrganizationViewModel>> SearchOrganization(string arg)
+    {
+        if (string.IsNullOrWhiteSpace(arg))
+        {
+            return Organizations;
+        }
+
+        return Organizations.Where(x => x.Name.Contains(arg, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDates();
+    }
+    
+    private async Task LoadDates()
+    {
+        try
+        {
+            Organizations = await OrganizationController.GetAll();
+
+            if (IsEdit)
+            {
+                Model = Mapper.Map<InviteEditModel>(await ModelController.GetByID(ID.GetValueOrDefault()));
+                SelectedOrganization = Organizations.FirstOrDefault(x => x.ID == Model.OrganizationID);
+            }
+        }
+        catch (ValidationApiException validationException)
+        {
+            Snackbar.Add(validationException.Content.Detail, Severity.Error);
+        }
+        catch (ApiException exception)
+        {
+            Snackbar.Add(exception.RequestMessage.Content.ToString(), Severity.Error);
+        }
+    }
+    
+    private bool Valid()
+    {
+        try
+        {
+            if (SelectedOrganization == null)
+            {
+                return false;
+            }
+
+            Model.OrganizationID = SelectedOrganization.ID;
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+
+    private async Task OnValidSumbit()
+    {
+        if (!Valid())
+        {
+            return;
+        }
+        try
+        {
+            var result = IsEdit
+                ? await ModelController.Update(ID.GetValueOrDefault(), Model)
+                : await ModelController.Create(Model);
+
+            Model = Mapper.Map<InviteEditModel>(result);
+            ID = result.ID;
+            if (UseNavigations)
+            {
+                NavigationManager.NavigateTo(NavigationUrl);
+            }
+            Snackbar.Add("Админ успешно сохранён");
+        }
+        catch (ValidationApiException validationException)
+        {
+            Snackbar.Add(validationException.Content.Detail, Severity.Error);
+        }
+        catch (ApiException exception)
+        {
+            Snackbar.Add(exception.RequestMessage.Content.ToString(), Severity.Error);
+        }
+    }
+}

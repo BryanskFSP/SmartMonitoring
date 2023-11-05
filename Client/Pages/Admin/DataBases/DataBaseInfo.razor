@@ -1,0 +1,62 @@
+﻿@using SmartMonitoring.Shared.ViewModels
+@using SmartMonitoring.Shared.Interfaces.Refit
+@using Serilog
+
+@page "/admin/databases/{ID:guid}/info"
+
+@layout AdminLayout
+
+<PageTitle>Базы данных</PageTitle>
+
+<MudGrid>
+    <MudItem>
+        <MudText Typo="Typo.h3" GutterBottom="true">Дашборды</MudText>
+    </MudItem>
+    <MudItem>
+        <MudFab StartIcon="@Icons.Material.Filled.Add"
+                Size="Size.Small"
+                Color="Color.Success"
+                Label="Добавить"
+                Text="Добавить"
+                DisableElevation="true"
+                Href="/admin/databases/create"/>
+    </MudItem>
+</MudGrid>
+<MudPaper Class="pa-4">
+</MudPaper>
+
+@code
+{
+    [Inject]
+    public IDataBaseController DataBaseController { get; set; }
+
+    [Inject]
+    public ILogController LogController { get; set; }
+
+    public List<LogViewModel>
+        Logs { get; set; }
+
+    public DataBaseViewModel DataBase { get; set; }
+
+    
+    [Parameter]
+    public Guid ID { get; set; }
+    
+    
+    private async Task LoadData()
+    {
+        try
+        {
+            DataBase = await DataBaseController.GetByID(ID);
+
+            if (DataBase != null)
+            {
+                Logs = await LogController.GetByDBID(ID);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error with load Exception!");
+        }
+    }
+}

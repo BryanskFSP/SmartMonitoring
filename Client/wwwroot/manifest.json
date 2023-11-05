@@ -1,16 +1,16 @@
 {
-  "name": "SmartMonitoring",
-  "short_name": "SmartMonitoring",
+  "name": "SmartME",
+  "short_name": "SmartME",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#03173d",
+  "theme_color": "#00BFFF",
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "icon-512.png",
+      "src": "icon-400.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "400x400"
     }
   ]
 }

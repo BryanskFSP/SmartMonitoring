@@ -1,21 +1,23 @@
 @inherits LayoutComponentBase
 
-<MudThemeProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+<MudThemeProvider Theme="Themes.TerminalTheme"/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
 
 <MudLayout>
-    <MudAppBar Elevation="0">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.AirplanemodeInactive" Color="Color.Inherit" Link="https://t.me/smartm0nitoringbot/" Target="_blank" />
-        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/bryasnkfsp" Target="_blank" />
+    <MudAppBar Elevation="0" Style="border-bottom-left-radius: 24px; border-bottom-right-radius: 24px">
+        <MudButton Style="padding: 8px; border-radius: 18px"
+                   Color="Color.Inherit"
+                   OnClick="@((e) => DrawerToggle())">
+            <MudIcon Icon="@Icons.Material.Filled.Menu"/>
+        </MudButton>
+        <MudSpacer/>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6">Панель Админа</MudText>
         </MudDrawerHeader>
-        <AdminMenu />
+        <AdminMenu/>
     </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
@@ -31,4 +33,5 @@
     {
         _drawerOpen = !_drawerOpen;
     }
+
 }
