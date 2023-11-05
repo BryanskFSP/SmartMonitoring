@@ -60,6 +60,7 @@ try
     #region Services
 
     builder.Services.AddScoped<AuthService>();
+    builder.Services.AddSingleton<ReferenceValuesService>();
     builder.Services.AddTransient<AdminService>();
     builder.Services.AddTransient<DataBaseService>();
     builder.Services.AddTransient<InviteService>();

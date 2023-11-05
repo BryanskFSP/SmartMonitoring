@@ -181,8 +181,6 @@ public class PSQLController: ControllerBase
         var res = await Service.GetWastedBytes(dbID);
         return res;
     }
-
-
 }
 
 public class DataBaseStatsModel

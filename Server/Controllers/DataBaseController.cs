@@ -234,6 +234,11 @@ public class DataBaseController : ControllerBase
         return res;
     }
 
+    /// <summary>
+    /// Try fix Logs by DataBase ID.
+    /// </summary>
+    /// <param name="id">DataBase ID.</param>
+    /// <returns>Service response.</returns>
     [HttpPost("{id}/fix/full")]
     public async Task<ActionResult<ServiceResponse<string>>> FullFix(Guid id)
     {

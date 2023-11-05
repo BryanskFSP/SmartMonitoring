@@ -58,6 +58,11 @@ public class WikiController : ControllerBase
         return Ok(Mapper.Map<WikiViewModel>(data));
     }
     
+    /// <summary>
+    /// Get Full Wiki by ID. 
+    /// </summary>
+    /// <param name="id">Wiki ID.</param>
+    /// <returns>Wiki model.</returns>
     [HttpGet("{id}/full")]
     public async Task<ActionResult<WikiViewModel>> GetByIDFull(Guid id)
     {

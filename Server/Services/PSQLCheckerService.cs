@@ -11,40 +11,14 @@ public class PSQLCheckerService
 {
     private PSQLService PsqlService;
     private LogService LogService;
+    private ReferenceValuesService ReferenceValuesService;
 
-    private static readonly List<ReferenceValueEntity> Values = new()
-    {
-        new()
-        {
-            Type = ReferenceType.Free,
-            Value = 75
-        },
-        new()
-        {
-            Type = ReferenceType.Df,
-            Value = 15,
-        },
-        new()
-        {
-            Type = ReferenceType.CachingRatio,
-            Value = 90
-        },
-        new()
-        {
-            Type = ReferenceType.CachingIndexesRatio,
-            Value = 90
-        },
-        new()
-        {
-            Type = ReferenceType.ProcessTimeInSeconds,
-            Value = 20
-        }
-    };
-
-    public PSQLCheckerService(PSQLService psqlService, LogService logService)
+    public PSQLCheckerService(PSQLService psqlService, LogService logService,
+        ReferenceValuesService referenceValuesService)
     {
         PsqlService = psqlService;
         LogService = logService;
+        ReferenceValuesService = referenceValuesService;
     }
 
     /// <summary>
@@ -56,15 +30,25 @@ public class PSQLCheckerService
         var resp = await PsqlService.GetModelsActive(entity.ID);
         if (resp.Status == false)
         {
+            var logFatal = new LogEditModel
+            {
+                LogType = LogType.Fatal,
+                Action = ActionType.KillDataBase,
+                OrganizationID = entity.OrganizationID,
+                DataBaseID = entity.ID,
+                Name = "База Данных не отвечает",
+                Description = resp.Name,
+            };
+            await LogService.Add(logFatal);
             return;
         }
 
-        var states = resp.Data; 
+        var states = resp.Data;
         foreach (var state in states)
         {
-            var time = Values.FirstOrDefault(x => x.Type == ReferenceType.ProcessTimeInSeconds).Value;
+            var time = await ReferenceValuesService.GetValueScalar(ReferenceType.ProcessTimeInSeconds);
             var now = DateTime.Now;
-            
+
             var log = new LogEditModel
             {
                 LogType = LogType.Verbose,
@@ -80,11 +64,11 @@ public class PSQLCheckerService
             if ((now - state.BackendStart).TotalSeconds >= ((int)time))
             {
                 log.LogType = LogType.Error;
-                log.Description  +=$"\nERROR!\nСессия длится более {log.Entity} секунд. Время убивать!";
+                log.Description += $"\nERROR!\nСессия длится более {log.Entity} секунд. Время убивать!";
             }
+
             await LogService.Add(log);
         }
-
     }
 
     /// <summary>
@@ -110,8 +94,22 @@ public class PSQLCheckerService
         {
             var hdd = await PsqlService.GetMemoryInfo(entity.ID, MemoryType.HDD);
             res = hdd;
+            if (res.Status == false)
+            {
+                var logFatal = new LogEditModel
+                {
+                    LogType = LogType.Fatal,
+                    Action = ActionType.KillDataBase,
+                    OrganizationID = entity.OrganizationID,
+                    DataBaseID = entity.ID,
+                    Name = "База Данных не отвечает",
+                    Description = res.Name,
+                };
+                await LogService.Add(logFatal);
+                return res;
+            }
 
-            var procentValue = Values.FirstOrDefault(x => x.Type == ReferenceType.Df).Value;
+            var procentValue = await ReferenceValuesService.GetValueScalar(ReferenceType.Df);
             var procent = int.Parse(hdd.Data.UseProcent.Replace("%", ""));
             log.Entity = procent.ToString();
             log.Description += $"{procent.ToString()} процентов";
@@ -141,8 +139,24 @@ public class PSQLCheckerService
     /// <param name="entity">DataBase entity.</param>
     public async Task<ServiceResponse<decimal>> CheckingCachingRatio(DataBaseEntity entity)
     {
-        var cachingRatioValue = Values.FirstOrDefault(x => x.Type == ReferenceType.CachingRatio).Value;
+        var cachingRatioValue = await ReferenceValuesService.GetValueScalar(ReferenceType.CachingRatio);
         var cachingRatio = await PsqlService.GetCachingRatio(entity.ID);
+
+        if (cachingRatio.Status == false)
+        {
+            var logFatal = new LogEditModel
+            {
+                LogType = LogType.Fatal,
+                Action = ActionType.KillDataBase,
+                OrganizationID = entity.OrganizationID,
+                DataBaseID = entity.ID,
+                Name = "База Данных не отвечает",
+                Description = cachingRatio.Name,
+            };
+            await LogService.Add(logFatal);
+            return cachingRatio;
+        }
+
         var log = new LogEditModel
         {
             LogType = LogType.Verbose,
@@ -171,9 +185,24 @@ public class PSQLCheckerService
     /// <param name="entity">DataBase entity.</param>
     public async Task<ServiceResponse<decimal>> CheckingCachingIndexesRatio(DataBaseEntity entity)
     {
-        var cachingRatioIndexesValue =
-            Values.FirstOrDefault(x => x.Type == ReferenceType.CachingIndexesRatio).Value;
+        var cachingRatioIndexesValue
+            = await ReferenceValuesService.GetValueScalar(ReferenceType.CachingIndexesRatio);
         var cachingIndexesRatio = await PsqlService.GetCachingIndexesRatio(entity.ID);
+
+        if (cachingIndexesRatio.Status == false)
+        {
+            var logFatal = new LogEditModel
+            {
+                LogType = LogType.Fatal,
+                Action = ActionType.KillDataBase,
+                OrganizationID = entity.OrganizationID,
+                DataBaseID = entity.ID,
+                Name = "База Данных не отвечает",
+                Description = cachingIndexesRatio.Name,
+            };
+            await LogService.Add(logFatal);
+            return cachingIndexesRatio;
+        }
 
         var log = new LogEditModel
         {
@@ -192,7 +221,6 @@ public class PSQLCheckerService
             log.Description = $"На сервере плохо с кэшированием индексов: {cachingIndexesRatio.Data} процентов!";
         }
 
-        
         await LogService.Add(log);
         return cachingIndexesRatio;
     }

@@ -1,3 +1,4 @@
+using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using SmartMonitoring.Server.Services;
@@ -132,6 +133,11 @@ public class TelegramUserController : ControllerBase
         if (invite == null)
         {
             return Forbid();
+        }
+
+        if (invite.UsedCount >= invite.UseCount || DateTime.Now > invite.ExpireAt )
+        {
+            return Problem("Приглашение недействительно.", statusCode: (int?)HttpStatusCode.Forbidden);
         }
 
         var inveditModel = Mapper.Map<InviteEditModel>(invite);

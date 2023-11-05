@@ -1,0 +1,80 @@
+@page "/admin/referencevalues"
+@using SmartMonitoring.Shared.Interfaces
+@using SmartMonitoring.Shared.Models
+@using Serilog
+@using SmartMonitoring.Shared.Extensions
+@using System.ComponentModel.DataAnnotations
+
+@layout AdminLayout
+
+<PageTitle>Значения метрик</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h3">Значения метрик</MudText>
+    </MudItem>
+    <MudItem xs="12">
+        <MudPaper Class="pa-4">
+            <MudButton Color="Color.Success" OnClick="Save" StartIcon="@Icons.Material.Filled.Save">Сохранить</MudButton>
+        </MudPaper>
+    </MudItem>
+    @foreach (var referenceValueModel in Models)
+    {
+        <MudItem xs="12" sm="3">
+            <MudPaper Class="pa-4">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h5">
+                            @(referenceValueModel.Type.GetAttribute<DisplayAttribute>().Name)
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudNumericField T="decimal" Label="Значение" @bind-Value=@referenceValueModel.Value></MudNumericField>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+@code
+{
+    [Inject]
+    public IReferenceValueController ModelController { get; set; }
+
+    public List<ReferenceValueModel> Models { get; set; } = new();
+
+    private async Task Save()
+    {
+        foreach (var model in Models)
+        {
+            try
+            {
+                await ModelController.Set(model);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Error with save Exception!");
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDates();
+    }
+
+    private async Task LoadDates()
+    {
+        try
+        {
+            var res = (await ModelController.GetAll());
+            Models = res.Data;
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error with Exception!");
+        }
+        StateHasChanged();
+    }
+}

@@ -1,17 +1,19 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SmartMonitoring.Server.Entities;
+namespace SmartMonitoring.Shared.Models;
 
-public class ReferenceValueEntity
+public class ReferenceValueModel
 {
     public Guid ID { get; set; }
     public ReferenceType Type { get; set; }
     public decimal Value { get; set; }
     public Guid? DataBaseID { get; set; }
     
-    [ForeignKey(nameof(DataBaseID))]
-    public DataBaseEntity? DataBase { get; set; }
+
+    public override int GetHashCode()
+    {
+        return (int)Type;
+    }
 }
 
 public enum ReferenceType
@@ -22,6 +24,8 @@ public enum ReferenceType
     Df,
     [Display(Name = "Коэффициэнт кэширования")]
     CachingRatio,
+    [Display(Name = "Коэффициэнт кэширования индексов")]
     CachingIndexesRatio,
+    [Display(Name = "Время выполнения запроса")]
     ProcessTimeInSeconds
 }

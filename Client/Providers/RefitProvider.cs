@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Refit;
 using SmartMonitoring.Client.HubClients;
 using SmartMonitoring.Shared;
+using SmartMonitoring.Shared.Interfaces;
 using SmartMonitoring.Shared.Interfaces.Refit;
 
 namespace SmartMonitoring.Client.Providers;
@@ -52,6 +53,9 @@ public class RefitProvider
         
         services.AddRefitClient<IInviteController>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = apiUrl);
+        
+        services.AddRefitClient<IReferenceValueController>(refitSettings)
+            .ConfigureHttpClient(c => c.BaseAddress = apiUrl);  
         
         services.AddScoped<LogHubClient>(x => new(apiUrl));
 

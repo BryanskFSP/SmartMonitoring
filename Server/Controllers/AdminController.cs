@@ -75,7 +75,12 @@ public class AdminController : ControllerBase
         return Ok(Mapper.Map<AdminViewModel>(data));
     }
 
-    // PUT: api/Admin/5
+    /// <summary>
+    /// Update Admin by ID.
+    /// </summary>
+    /// <param name="id">Admin ID.</param>
+    /// <param name="editModel">Admin Edit model.</param>
+    /// <returns>Admin model.</returns>
     [HttpPut("{id}")]
     public async Task<ActionResult<AdminViewModel>> Edit(Guid id, [FromBody] AdminEditModel editModel)
     {
@@ -88,7 +93,11 @@ public class AdminController : ControllerBase
         return Ok(Mapper.Map<AdminViewModel>(data));
     }
 
-    // DELETE: api/Admin/5
+    /// <summary>
+    /// Delete Admin by ID.
+    /// </summary>
+    /// <param name="id">Admin ID.</param>
+    /// <returns>No content</returns>
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(Guid id)
     {

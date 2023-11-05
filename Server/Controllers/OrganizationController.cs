@@ -25,7 +25,10 @@ public class OrganizationController : ControllerBase
         Mapper = mapper;
     }
 
-    // GET: api/Organization
+    /// <summary>
+    /// Get all Organizations.
+    /// </summary>
+    /// <returns>List of Organizations.</returns>
     [HttpGet]
     public async Task<ActionResult<List<OrganizationViewModel>>> GetAll()
     {
@@ -33,6 +36,7 @@ public class OrganizationController : ControllerBase
         return datas;
     }
 
+    
     [HttpGet("full")]
     public async Task<ActionResult<List<OrganizationViewModel>>> GetFull()
     {
