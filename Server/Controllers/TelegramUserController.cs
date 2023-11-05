@@ -137,7 +137,7 @@ public class TelegramUserController : ControllerBase
         var inveditModel = Mapper.Map<InviteEditModel>(invite);
         inveditModel.UsedCount += 1;
         await InviteService.Update(invite.ID, inveditModel);
-        
+        editModel.OrganizationID = invite.OrganizationID;
         var data = await Service.Create(editModel);
         if (data == null)
         {

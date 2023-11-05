@@ -1,0 +1,26 @@
+﻿@using SmartMonitoring.Client.Components.Wiki
+
+@page "/admin/wikies/{ID:guid}/edit"
+@page "/admin/wikies/create"
+
+@layout AdminLayout
+
+<PageTitle>@PageTitle</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudGrid>
+            <MudItem>
+                <MudFab DisableElevation="true"
+                        StartIcon="@Icons.Material.Filled.ArrowBack"
+                        Text="Назад" Href="/admin/wikies"/>
+            </MudItem>
+            <MudItem>
+                <MudText Typo="Typo.h3">@PageTitle</MudText>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem>
+        <WikiEditCard ID=@ID UseNavigations="true" NavigationUrl="/admin/wikies/{ID}/edit"/>
+    </MudItem>
+</MudGrid>

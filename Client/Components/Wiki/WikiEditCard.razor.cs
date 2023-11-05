@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using AutoMapper;
+using FormatWith;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Refit;
@@ -20,13 +21,27 @@ public partial class WikiEditCard
 
     [Inject] private ISnackbar Snackbar { get; set; }
 
-    [Parameter] public Guid? ID { get; set; }
+    [Parameter]
+    public Guid? ID { get; set; }
 
     public bool IsEdit => ID != null;
     public string PageTitle => IsEdit ? "Изменение Wiki" : "Создание Wiki";
-
+    
     private WikiEditModel Model = new();
     private WikiSolutionEditModel WikiSolutionBeforeEdit;
+
+    [Parameter]
+    public bool UseNavigations { get; set; } = false;
+
+    private string _navigationUrl = "/admin/wikies/{ID}/edit";
+
+    [Parameter]
+    public string? NavigationUrl
+    {
+        get => _navigationUrl.FormatWith(new { ID });
+        set => _navigationUrl = value ?? string.Empty;
+    }
+
 
     private List<ActionType> ActionTypes = new(Enum.GetValues<ActionType>());
 
@@ -36,7 +51,7 @@ public partial class WikiEditCard
         {
             if (IsEdit)
             {
-                Model = Mapper.Map<WikiEditModel>(await ModelController.GetByID(ID.GetValueOrDefault()));
+                Model = Mapper.Map<WikiEditModel>(await ModelController.GetByIDFull(ID.GetValueOrDefault()));
             }
         }
         catch (ValidationApiException validationException)
@@ -92,17 +107,17 @@ public partial class WikiEditCard
     {
         foreach (var ws in Model.WikiSolutions)
         {
-            if (!string.IsNullOrWhiteSpace(ws.Name))
+            if (string.IsNullOrWhiteSpace(ws.Name))
             {
                 Snackbar.Add("Не указано название решения!", Severity.Warning);
                 return false;
             }
-            if (!string.IsNullOrWhiteSpace(ws.Description))
+            if (string.IsNullOrWhiteSpace(ws.Description))
             {
                 Snackbar.Add("Не указано описание решения!", Severity.Warning);
                 return false;
             }
-            if (!string.IsNullOrWhiteSpace(ws.SqlScript))
+            if (string.IsNullOrWhiteSpace(ws.SqlScript))
             {
                 Snackbar.Add("Не указан скрипт решения!", Severity.Warning);
                 return false;
@@ -126,7 +141,12 @@ public partial class WikiEditCard
                 : await ModelController.Create(Model);
 
             Model = Mapper.Map<WikiEditModel>(result);
-            NavigationManager.NavigateTo($"/admin/wikies/{result.ID}/edit");
+            ID = result.ID;
+
+            if (UseNavigations)
+            {
+                NavigationManager.NavigateTo(NavigationUrl);
+            }
             Snackbar.Add("Wiki успешно сохранено");
         }
         catch (ValidationApiException validationException)
@@ -152,7 +172,12 @@ public partial class WikiEditCard
                 await ModelController.Create(Model);
 
             Model = Mapper.Map<WikiEditModel>(result);
-            NavigationManager.NavigateTo($"/admin/wikies/{result.ID}/edit");
+            ID = result.ID;
+
+            if (UseNavigations)
+            {
+                NavigationManager.NavigateTo(NavigationUrl);
+            }
             Snackbar.Add("Wiki успешно сохранено");
         }
         catch (ApiException exception)

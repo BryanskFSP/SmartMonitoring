@@ -16,6 +16,10 @@ public interface IWikiController
     [Headers("Authorization: Bearer")]
     Task<WikiViewModel> GetByID(Guid id);
     
+    [Get("/api/Wiki/{id}/full")]
+    [Headers("Authorization: Bearer")]
+    Task<WikiViewModel> GetByIDFull(Guid id);
+    
     [Post("/api/Wiki")]
     [Headers("Authorization: Bearer")]
     Task<WikiViewModel> Create(WikiEditModel Wiki);

@@ -57,6 +57,18 @@ public class WikiController : ControllerBase
 
         return Ok(Mapper.Map<WikiViewModel>(data));
     }
+    
+    [HttpGet("{id}/full")]
+    public async Task<ActionResult<WikiViewModel>> GetByIDFull(Guid id)
+    {
+        var data = await Service.GetByIDFull(id);
+        if (data == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(Mapper.Map<WikiViewModel>(data));
+    }
 
     /// <summary>
     /// Create Wiki.

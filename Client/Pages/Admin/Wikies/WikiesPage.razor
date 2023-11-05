@@ -1,0 +1,84 @@
+﻿@page "/admin/wikies"
+@using SmartMonitoring.Shared.ViewModels
+@using SmartMonitoring.Shared.Extensions
+@using System.ComponentModel.DataAnnotations
+
+@layout AdminLayout
+
+<PageTitle>Wiki</PageTitle>
+
+<MudGrid>
+    <MudItem>
+        <MudText Typo="Typo.h3" GutterBottom="true">Пользователи</MudText>
+    </MudItem>
+    <MudItem>
+        <MudFab StartIcon="@Icons.Material.Filled.Add"
+                Size="Size.Small"
+                Color="Color.Success"
+                Label="Добавить"
+                Text="Добавить"
+                DisableElevation="true"
+                Href="/admin/wikies/create"/>
+    </MudItem>
+</MudGrid>
+<MudPaper Class="pa-4">
+    @if (Models == null)
+    {
+        @* <MudText Class="mb-8">Загрузка данных...</MudText> *@
+        @* <MudProgressCircular Color="Color.Default" Indeterminate="true"/> *@
+        <TableSkeleton/>
+    }
+    else
+    {
+        <MudTable Items="Models" Hover="true" Filter="new Func<WikiViewModel, bool>(FilterFuncInput)" SortLabel="Sort By" Elevation="0">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Wiki</MudText>
+                <MudSpacer/>
+                <MudTextField @bind-Value="SearchString" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<WikiViewModel, object>(x => x.Name)">Название</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<WikiViewModel, object>(x => x.Type)">Тип проблемы</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<WikiViewModel, object>(x => x.WikiSolutions?.Count)">Решения</MudTableSortLabel>
+                </MudTh>
+                <MudTh>Действие</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>
+                    @(context.Type.GetAttribute<DisplayAttribute>().Name)
+                </MudTd>
+                <MudTd>
+                    Решения доступны к просмотру позже.
+                </MudTd>
+                <MudTd DataLabel="Действие">
+                    <MudGrid>
+                        <MudItem>
+                            <MudFab Label="Изменить"
+                                    Size="Size.Small"
+                                    StartIcon="@Icons.Material.Filled.Edit"
+                                    Href="@($"/admin/wikies/{context.ID}/edit")"
+                                    DisableElevation="true"/>
+                        </MudItem>
+                        <MudItem>
+                            <MudFab Text="Удалить"
+                                    Size="Size.Small"
+                                    Color="Color.Error"
+                                    StartIcon="@Icons.Material.Filled.Delete"
+                                    OnClick="(() => DeleteModel(context))"
+                                    DisableElevation="true"/>
+                        </MudItem>
+                    </MudGrid>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager/>
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>

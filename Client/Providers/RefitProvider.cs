@@ -47,6 +47,12 @@ public class RefitProvider
         services.AddRefitClient<ILogController>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = apiUrl);
         
+        services.AddRefitClient<IWikiController>(refitSettings)
+            .ConfigureHttpClient(c => c.BaseAddress = apiUrl);
+        
+        services.AddRefitClient<IInviteController>(refitSettings)
+            .ConfigureHttpClient(c => c.BaseAddress = apiUrl);
+        
         services.AddScoped<LogHubClient>(x => new(apiUrl));
 
     }

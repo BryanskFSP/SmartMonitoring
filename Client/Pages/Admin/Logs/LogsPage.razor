@@ -67,20 +67,20 @@
                     @(context.Description ?? "не указан")
                 </MudTd>
                 <MudTd>
-                    @if (context.DataBaseID != null)
+                    @if (context.DataBase != null)
                     {
                         <MudChip Icon="@Icons.Material.Filled.Person"
                                  Href=@($"admin/databases/{context.DataBaseID}/edit")
                                  Color="Color.Success"
                                  Size="Size.Small">
-                            @(context.DataBase.Name)
+                            @(context.DataBase?.Name)
                         </MudChip>
                     }
                     else
                     {
                         <MudChip
                             Size="Size.Small">
-                            не указан
+                            не указана
                         </MudChip>
                     }
                 </MudTd>
@@ -185,7 +185,9 @@
     private async Task OnAdd(LogViewModel log)
     {
         Snackbar.Add("New Add Event!");
-        Models.Add(log);
+
+        var model = await ModelController.GetByID(log.ID);
+        Models.Add(model);
         StateHasChanged();
     }
 
