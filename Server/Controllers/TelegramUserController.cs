@@ -134,7 +134,7 @@ public class TelegramUserController : ControllerBase
             return Forbid();
         }
 
-        var inveditModel = Mapper.Map<InviteEditModel>(inviteCode);
+        var inveditModel = Mapper.Map<InviteEditModel>(invite);
         inveditModel.UsedCount += 1;
         await InviteService.Update(invite.ID, inveditModel);
         
