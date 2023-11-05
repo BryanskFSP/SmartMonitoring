@@ -2,9 +2,36 @@
 
 <PageTitle>Smart Monitoring</PageTitle>
 
-<MudText Typo="Typo.h3" GutterBottom="true">Здравствуйте!</MudText>
-<MudText Class="mb-8">Рады приветствовать в системе Smart Monitoring - умный присмотр за продом и базами данных.</MudText>
-<MudAlert Severity="Severity.Normal" Icon="@Icons.Material.Filled.AirplanemodeInactive">Один из модулей реализован в <MudLink Href="https://t.me/smartm0nitoringbot" Typo="Typo.body2" Color="Color.Inherit"><b>Telegram боте.</b></MudLink></MudAlert>
-<MudAlert Severity="Severity.Normal" Icon="@Icons.Material.Filled.AdminPanelSettings">
-    <MudLink Href="admin" Typo="Typo.body2" Color="Color.Inherit">Переход в админ панель</MudLink>
-</MudAlert>
+<MudGrid>
+
+    <MudItem xs="12">
+        <MudText Typo="Typo.h3" GutterBottom="true">Здравствуйте!</MudText>
+
+    </MudItem>
+    <MudItem xs="12">
+        <MudText Class="mb-8">Рады приветствовать в системе Smart Monitoring - умный присмотр за продом и базами данных.</MudText>
+
+    </MudItem>
+    <MudItem xs="12">
+        <MudAlert Severity="Severity.Normal" Icon="@Icons.Custom.Brands.Telegram">
+            Один из модулей реализован в
+            <MudLink Href="https://t.me/smartm0nitoringbot" Typo="Typo.body2" Color="Color.Inherit">
+                <b>Telegram боте.</b>
+            </MudLink>
+        </MudAlert>
+    </MudItem>
+    <MudItem xs="12">
+        <MudAlert Severity="Severity.Normal" Icon="@Icons.Material.Filled.AdminPanelSettings">
+            <MudLink Href="admin" Typo="Typo.body2" Color="Color.Success">Переход в админ панель</MudLink>
+        </MudAlert>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudAlert Severity="Severity.Normal" Icon="@Icons.Custom.Brands.GitHub">
+            Исходный код
+            <MudLink Href="https://github.com/bryanskfsp" Typo="Typo.body2" Color="Color.Inherit">
+                <b>находится тут</b>
+            </MudLink>
+        </MudAlert>
+    </MudItem>
+</MudGrid>
