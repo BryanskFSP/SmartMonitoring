@@ -435,6 +435,7 @@ public class PSQLService
 
             await connection.CloseAsync();
             res.Data = ress;
+            res.Status = true;
         }
         catch (Exception e)
         {

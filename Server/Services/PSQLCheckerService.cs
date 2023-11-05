@@ -4,6 +4,9 @@ using SmartMonitoring.Shared.Models;
 
 namespace SmartMonitoring.Server.Services;
 
+/// <summary>
+/// Сервис, отвечающий за регистрации отколнений.
+/// </summary>
 public class PSQLCheckerService
 {
     private PSQLService PsqlService;

@@ -143,6 +143,9 @@
         {
             LogViewModel = await LogController.GetByID(LogID);
             Wikies = await WikiController.GetFull();
+
+            SelectedActionType = LogViewModel.Action;
+            StateHasChanged();
         }
         catch (Exception e)
         {
