@@ -18,6 +18,57 @@ public class PSQLService
     {
         DBService = dbService;
     }
+    
+    /// <summary>
+    /// Run script.
+    /// </summary>
+    /// <param name="dbID">DB ID</param>
+    /// <param name="script">Script.</param>
+    public async Task<ServiceResponse<string>> RunScript(Guid dbID, string script)
+    {
+        var res = new ServiceResponse<string>();
+        var dataBase = await DBService.GetByID(dbID);
+        if (dataBase == null)
+        {
+            res.Name = "DB not found";
+            return res;
+        }
+
+        try
+        {
+            using var connection = GetConnection(dataBase);
+            await connection.OpenAsync();
+            
+            using var cmd = new NpgsqlCommand(script, connection);
+
+            var reader = await cmd.ExecuteReaderAsync();
+            var ress = new StringBuilder();
+            while (reader.Read())
+            {
+                try
+                {
+                    ress.AppendLine(reader.GetString(0));
+                }
+                catch (Exception e)
+                {
+                                    
+                }
+            }
+
+            res.Data = ress.ToString();
+
+            await connection.CloseAsync();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetMemoryInfo");
+            res.Status = false;
+            res.Name = e.Message;
+            return res;
+        }
+
+        return res;
+    }
 
     /// <summary>
     /// Get DB Caching ratio.

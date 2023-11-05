@@ -7,16 +7,20 @@ namespace SmartMonitoring.Shared.Interfaces.Refit;
 public interface ILogController
 {
     [Get("/api/Log")]
-    Task<List<LogViewModel>> GetAll();  
+    Task<List<LogViewModel>> GetAll();
+
     [Get("/api/Log/full")]
     Task<List<LogViewModel>> GetFull();
 
     [Get("/api/Log/db/{dbid}")]
     Task<List<LogViewModel>> GetByDBID(Guid dbid);
-    
+
     [Post("/api/Log/{id}")]
     Task<ServiceResponse<string>> FixError(Guid id);
-    
+
     [Get("/api/Log/{id}")]
     Task<LogViewModel> GetByID(Guid id);
+
+    [Post("/api/Log/{logID}/wikisolution/{wikiSolutionID}")]
+    Task<ServiceResponse<string>> UseWikiSolution(Guid logID, Guid wikiSolutionID);
 }

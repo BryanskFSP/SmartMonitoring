@@ -1,0 +1,153 @@
+﻿@page "/sandbox/{LogID:guid}"
+@using SmartMonitoring.Shared.Interfaces.Refit
+@using SmartMonitoring.Shared.Models
+@using System.ComponentModel.DataAnnotations
+@using Serilog
+@using SmartMonitoring.Shared.Extensions
+@using SmartMonitoring.Shared.ViewModels
+
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudPaper Class="pa-2">
+            <MudAutocomplete
+                ValueChanged=@((ActionType value) => { SelectedActionType = value; StateHasChanged();})
+                Label="Тип проблемы"
+                SearchFunc="@SearchActionType"
+                ToStringFunc="@(x => x.GetAttribute<DisplayAttribute>().Name)"/>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12">
+        <MudGrid>
+            @if (Wikies.Any(x => x.Type == SelectedActionType))
+            {
+               @foreach (var wiki in Wikies.Where(x => x.Type == SelectedActionType))
+            {
+                <MudItem xs="12">
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.h3">@wiki.Name</MudText>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudGrid>
+                                @if (wiki.WikiSolutions.Any())
+                                {
+                                    @foreach (var wikiSolution in wiki.WikiSolutions)
+                                    {
+                                        <MudItem xs="12" sm="6">
+                                            <MudCard>
+                                                <MudCardHeader>
+                                                    <MudText Typo="Typo.h5">@wikiSolution.Name</MudText>
+                                                </MudCardHeader>
+                                                <MudCardContent>
+                                                    <MudGrid>
+                                                        <MudItem xs="12">
+                                                            <MudText>@wikiSolution.Description</MudText>
+                                                        </MudItem>
+                                                        <MudItem xs="12">
+                                                            <MudText>@wikiSolution.SqlScript</MudText>
+                                                        </MudItem>
+                                                    </MudGrid>
+                                                </MudCardContent>
+                                                <MudCardActions>
+                                                    <MudButton OnClick="@(() => UseSolution(wikiSolution))">Использовать решение</MudButton>
+                                                </MudCardActions>
+                                            </MudCard>
+                                        </MudItem>
+                                    }
+                                }
+                                else
+                                {
+                                    <MudItem xs="12">
+                                        <MudText>На данную ошибку ещё не добавили решения.</MudText>
+                                    </MudItem>
+                                }
+
+                            </MudGrid>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+            } 
+            }
+            else
+            {
+                <MudItem xs="12">
+                    <MudText>На данную ошибку ещё не добавили данные для устранения.</MudText>
+                </MudItem>
+            }
+            
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Inject]
+    private ISnackbar Snackbar { get; set; }
+
+    [Inject]
+    private IDialogService DialogService { get; set; }
+    
+    
+    private async Task UseSolution(WikiSolutionViewModel model)
+    {
+        var result = await DialogService.ShowMessageBox("Подтверждение",
+            $"Вы точно хотите исправить лог решением {model.Name}?", "Да", "Нет");
+
+        if (!result.GetValueOrDefault(false))
+        {
+            return;
+        }
+
+        var res = await LogController.UseWikiSolution(LogID, model.ID);
+        if (res.Status)
+        {
+            Snackbar.Add("Лог успешно исправлен!", Severity.Success);
+        }
+        await LoadDates();
+    }
+
+    public ActionType SelectedActionType { get; set; } = ActionType.CachingRatio;
+    [Inject]
+    public IWikiController WikiController { get; set; }
+
+    [Inject]
+    public ILogController LogController { get; set; }
+
+    public List<ActionType> ActionTypes { get; set; } = new(Enum.GetValues<ActionType>());
+    public List<WikiViewModel> Wikies { get; set; } = new();
+    public LogViewModel? LogViewModel { get; set; }
+
+    [Parameter]
+    public Guid LogID { get; set; }
+
+    private async Task<IEnumerable<ActionType>> SearchActionType(string arg)
+    {
+        if (string.IsNullOrWhiteSpace(arg))
+        {
+            return ActionTypes;
+        }
+
+        return ActionTypes.Where(x =>
+            x.GetAttribute<DisplayAttribute>().Name
+                .Contains(arg, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDates();
+    }
+
+    private async Task LoadDates()
+    {
+        try
+        {
+            LogViewModel = await LogController.GetByID(LogID);
+            Wikies = await WikiController.GetFull();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error with Exception!");
+        }
+    }
+
+}

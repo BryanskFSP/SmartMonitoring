@@ -11,12 +11,14 @@ namespace SmartMonitoring.Server.Controllers;
 public class LogController : ControllerBase
 {
     private IMapper Mapper;
+    private WikiSolutionService WikiSolutionService;
     private LogService Service;
 
-    public LogController(IMapper mapper, LogService service)
+    public LogController(IMapper mapper, LogService service, WikiSolutionService wikiSolutionService)
     {
         Mapper = mapper;
         Service = service;
+        WikiSolutionService = wikiSolutionService;
     }
 
     [HttpGet]
@@ -72,5 +74,24 @@ public class LogController : ControllerBase
         }
 
         return Mapper.Map<LogViewModel>(log);
+    }
+
+    [HttpPost("{logID}/wikisolution/{wikiSolutionID}")]
+    public async Task<ActionResult<ServiceResponse<string>>> UseWikiSolution(Guid logID, Guid wikiSolutionID)
+    {
+        var log = await Service.GetByID(logID);
+
+        if (log == null)
+        {
+            return NotFound();
+        }
+
+        var wikiSolution = await WikiSolutionService.GetByID(wikiSolutionID);
+        if (wikiSolution == null)
+        {
+            return NotFound();
+        }
+
+        return await Service.RunSqlScript(log.DataBaseID.GetValueOrDefault(), wikiSolution.SqlScript);
     }
 }

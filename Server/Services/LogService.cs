@@ -209,4 +209,9 @@ public class LogService
 
         return res;
     }
+
+    public async Task<ServiceResponse<string>> RunSqlScript(Guid dbID, string script)
+    {
+        return await PsqlService.RunScript(dbID, script);
+    }
 }

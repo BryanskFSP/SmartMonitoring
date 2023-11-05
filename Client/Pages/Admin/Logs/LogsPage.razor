@@ -100,6 +100,7 @@
                         @if (context.LogType >= LogType.Error && !context.FixStatus)
                         {
                             <MudButton OnClick=@(() => FixError(context))>Исправить ошибку</MudButton>
+                            <MudButton Href=@($"/sandbox/{context.ID}") StartIcon="@Icons.Material.Filled.CheckBox">Песочница</MudButton>
                         }
                         else
                         {

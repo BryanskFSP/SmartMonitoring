@@ -11,6 +11,7 @@ services:
       - ASPNETCORE_ENVIRONMENT
       - DB_CONNECTION_STRING
       - BOT_URL
+      - REDIS_HOST
       - AUTH_KEY
     networks:
       - proxy
